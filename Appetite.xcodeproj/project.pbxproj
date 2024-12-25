@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		65BC2B72774F3618C523F04A /* Pods_Appetite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 53E7147C88076ECD4DBF3AFA /* Pods_Appetite.framework */; };
+		B5FF84302D1BB47000A5BE2D /* AppetiteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5FF842B2D1BB47000A5BE2D /* AppetiteApp.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -15,13 +16,12 @@
 		614E0CCC6827F8E1BFE360BD /* Pods-Appetite.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Appetite.release.xcconfig"; path = "Target Support Files/Pods-Appetite/Pods-Appetite.release.xcconfig"; sourceTree = "<group>"; };
 		B26205BC3068C7C9CE623B6B /* Pods-Appetite.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Appetite.debug.xcconfig"; path = "Target Support Files/Pods-Appetite/Pods-Appetite.debug.xcconfig"; sourceTree = "<group>"; };
 		B5FC6AA72D1BA9A500D0FA2D /* Appetite.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Appetite.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B5FF842B2D1BB47000A5BE2D /* AppetiteApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppetiteApp.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		B5FC6AA92D1BA9A500D0FA2D /* Appetite */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = Appetite;
 			sourceTree = "<group>";
 		};
@@ -45,7 +45,6 @@
 				B26205BC3068C7C9CE623B6B /* Pods-Appetite.debug.xcconfig */,
 				614E0CCC6827F8E1BFE360BD /* Pods-Appetite.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -60,6 +59,7 @@
 		B5FC6A9E2D1BA9A500D0FA2D = {
 			isa = PBXGroup;
 			children = (
+				B5FF842B2D1BB47000A5BE2D /* AppetiteApp.swift */,
 				B5FC6AA92D1BA9A500D0FA2D /* Appetite */,
 				B5FC6AA82D1BA9A500D0FA2D /* Products */,
 				74BC20378C75475D5A4CE555 /* Pods */,
@@ -191,6 +191,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B5FF84302D1BB47000A5BE2D /* AppetiteApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -327,6 +328,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"Appetite/Preview Content\"";
 				DEVELOPMENT_TEAM = GNG4VLAQ7U;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -357,6 +359,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"Appetite/Preview Content\"";
 				DEVELOPMENT_TEAM = GNG4VLAQ7U;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
