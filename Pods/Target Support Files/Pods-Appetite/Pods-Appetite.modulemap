@@ -1,0 +1,6 @@
+framework module Pods_Appetite {
+  umbrella header "Pods-Appetite-umbrella.h"
+
+  export *
+  module * { export * }
+}
