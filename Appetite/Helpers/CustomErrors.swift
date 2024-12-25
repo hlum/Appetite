@@ -8,6 +8,14 @@
 import Foundation
 
 enum CustomErrors: Error {
+    
+//    HotPepperAPIError
     case NoDataFound
     case InvalidURL
+    
+    //LocationManager Errors
+    case LocationPermissionDenied
+
 }
+
+
