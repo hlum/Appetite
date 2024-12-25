@@ -9,6 +9,8 @@ import SwiftUI
 import MapKit
 
 final class MapViewModel:ObservableObject{
+    @Published var showMapStyleMenu:Bool = false
+    @Published var mapStyle:MapStyle = .standard
     let locationManger = LocationManager()
     @Published var showLocationPermissionAlert:Bool = false
     @Published var cameraPosition:MapCameraPosition = .automatic
@@ -56,6 +58,7 @@ struct MapView: View {
             Map(position:$vm.cameraPosition){
                 UserAnnotation(anchor: .center)
             }
+            .mapStyle(vm.mapStyle)
             VStack{
                 Spacer()
                 BottomToolBar
@@ -68,23 +71,70 @@ struct MapView: View {
 }
 // MARK: UIComponents
 extension MapView{
+    
     private var BottomToolBar:some View{
         HStack{
+            UserLocationButton
+            Spacer()
             Button {
-                if let userLocation = vm.userLocation{
-                    vm.moveCamera(to:userLocation)
-                }
+                
             } label: {
-                Image(systemName:"paperplane.fill")
+                Image(systemName: "magnifyingglass")
                     .font(.system(size: 20))
                     .padding()
                     .background(.white)
                     .foregroundColor(.blue)
                     .cornerRadius(10)
-                    .padding(.leading,30)
                     .shadow(radius: 10)
             }
             Spacer()
+            mapStyleMenuView
+        }
+        .padding(.horizontal,30)
+    }
+    
+    private var UserLocationButton:some View{
+        Button {
+            if let userLocation = vm.userLocation{
+                vm.moveCamera(to: userLocation)
+            }
+        } label: {
+            Image(systemName:"paperplane.fill")
+                .font(.system(size: 20))
+                .padding()
+                .background(.white)
+                .foregroundColor(.blue)
+                .cornerRadius(10)
+                .shadow(radius: 10)
+        }
+    }
+    
+    private var mapStyleMenuView:some View{
+        Menu {
+            Button("標準") {
+                vm.mapStyle = .standard(elevation: .realistic)
+            }
+            
+            Button("航空写真") {
+                vm.mapStyle = .hybrid(elevation: .realistic)
+            }
+        } label: {
+            mapStyleMenuButton
+        }
+    }
+    private var mapStyleMenuButton:some View{
+        Button {
+            vm.showMapStyleMenu = true
+        } label: {
+            VStack{
+                Image(systemName: "map.fill")
+                    .font(.system(size: 20))
+                    .padding()
+                    .background(.white)
+                    .foregroundStyle(.blue)
+                    .cornerRadius(10)
+            }
+            .shadow(radius: 10)
         }
     }
 }
