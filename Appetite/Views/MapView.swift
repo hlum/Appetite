@@ -52,6 +52,7 @@ final class MapViewModel:ObservableObject{
 }
 
 struct MapView: View {
+    @State var showSearchView:Bool = false
     @StateObject var vm:MapViewModel = MapViewModel()
     var body: some View {
         ZStack{
