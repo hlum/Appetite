@@ -6,9 +6,8 @@
 //
 
 import Foundation
-
+// 使用する検索条件
 /**
- 使用する検索条件
  keyword
  lat
  lon
@@ -16,6 +15,7 @@ import Foundation
  genre
  budget
  */
+
 class HotPepperAPIClient:ObservableObject {
     private let baseURL = "https://webservice.recruit.co.jp/hotpepper/gourmet/v1/"
     private let apiKey: String
@@ -115,6 +115,7 @@ class HotPepperAPIClient:ObservableObject {
             
             do {
                 let decoder = JSONDecoder()
+                //HotPepperResponse でカスタムdecode keyを書いてある
                 let response = try decoder.decode(HotPepperResponse.self, from: data)
                 completion(.success(response))
             } catch {
