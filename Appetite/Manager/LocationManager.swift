@@ -11,7 +11,7 @@ import CoreLocation
 
 final class LocationManager:NSObject,CLLocationManagerDelegate{
     private let locationManager = CLLocationManager()
-    var onLocationUpdate:((Result<CLLocation,Error>)->())?
+    var onLocationUpdate:((Result<CLLocationCoordinate2D,Error>)->())?
     override init() {
         super.init()
         locationManager.delegate = self
@@ -48,7 +48,7 @@ final class LocationManager:NSObject,CLLocationManagerDelegate{
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let newLocation = locations.last else { return }
-        onLocationUpdate?(.success(newLocation))
+        onLocationUpdate?(.success(newLocation.coordinate))
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
