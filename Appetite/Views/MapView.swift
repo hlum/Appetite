@@ -90,17 +90,7 @@ struct MapView: View {
             UserAnnotation(anchor: .center)
             
             ForEach(vm.nearbyRestaurants) { restaurant in
-                let coordinate = CLLocationCoordinate2D(latitude: restaurant.lat, longitude: restaurant.lon)
-                
-                Annotation("",coordinate: coordinate){
-                    annotationContentView(restaurant: restaurant)
-                        .onTapGesture {
-                            withAnimation(.bouncy) {
-                                selectedRestaurant = restaurant
-                                
-                            }
-                        }
-                }
+                restaurantAnnotations(restaurant: restaurant)
             }
         }
         .mapStyle(mapStyle == .hybrid ? .hybrid : .standard)
@@ -190,6 +180,20 @@ extension MapView{
                     .cornerRadius(10)
             }
             .shadow(radius: 10)
+        }
+    }
+    
+    private func restaurantAnnotations(restaurant:Shop) -> Annotation<Text, some View>{
+        let coordinate = CLLocationCoordinate2D(latitude: restaurant.lat, longitude: restaurant.lon)
+        
+        return Annotation("",coordinate: coordinate){
+            annotationContentView(restaurant: restaurant)
+                .onTapGesture {
+                    withAnimation(.bouncy) {
+                        selectedRestaurant = restaurant
+                        
+                    }
+                }
         }
     }
 
