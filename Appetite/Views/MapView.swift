@@ -10,32 +10,46 @@ import MapKit
 
 final class MapViewModel:ObservableObject{
     let locationManger = LocationManager()
+    @Published var nearbyRestaurants:[Shop] = []
     @Published var showLocationPermissionAlert:Bool = false
     @Published var cameraPosition:MapCameraPosition = .automatic
     @Published var userLocation:CLLocationCoordinate2D?
     
     init(){
-        getUserLocation()
+        getUserLocationAndNearbyRestaurants()
     }
-    
-    func getUserLocation(){
+        
+    func getUserLocationAndNearbyRestaurants(){
         locationManger.onLocationUpdate = {[weak self] result in
-            DispatchQueue.main.async {
-                switch result{
-                case .success(let userLocationResult):
-                    self?.userLocation = userLocationResult
-                case .failure(_):
-                    print("Got faliure")
-                    self?.showLocationPermissionAlert = true
-                }
+            switch result{
+            case .success(let userCoordinate):
+                self?.userLocation = userCoordinate
+                self?.getNearbyRestaurants(at: userCoordinate)
+            case .failure(let error):
+                print(error.localizedDescription)
             }
         }
     }
     
+    func getNearbyRestaurants(at userCoordinate:CLLocationCoordinate2D){
+        let apiCaller = HotPepperAPIClient(apiKey:"4914164be3a0653f")
+        apiCaller.searchShops(lat: userCoordinate.latitude, lon: userCoordinate.longitude,range: 2) { [weak self] result in
+                switch result{
+                case .success(let response):
+                    DispatchQueue.main.async {
+                        self?.nearbyRestaurants = response.results.shops
+                    }
+                case .failure(let error):
+                    print(error.localizedDescription)
+                }
+            }
+        
+    }
+    
     func moveCamera(to coordinate:CLLocationCoordinate2D){
         let span = MKCoordinateSpan(
-            latitudeDelta: 0.001,
-            longitudeDelta: 0.001
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01
         )
         let region = MKCoordinateRegion(
             center: coordinate,
@@ -64,22 +78,35 @@ enum MapStyleCases:Int{
 }
 
 struct MapView: View {
+    @State var searchText:String = ""
+    @State var showNearbyRestaurantSheet:Bool = true
     @State var showMapStyleMenu:Bool = false
     @AppStorage("mapStyle") var mapStyle:MapStyleCases = .hybrid
     @State var showSearchView:Bool = false
     @StateObject var vm:MapViewModel = MapViewModel()
     var body: some View {
-        ZStack{
-            Map(position:$vm.cameraPosition){
-                UserAnnotation(anchor: .center)
-            }
-            .mapStyle(mapStyle == .hybrid ? .hybrid : .standard)
+        Map(position:$vm.cameraPosition){
+            UserAnnotation(anchor: .center)
         }
+        .mapStyle(mapStyle == .hybrid ? .hybrid : .standard)
+        .sheet(isPresented: $showNearbyRestaurantSheet, content: {
+            NearbyRestaurantSheetView(nearbyRestaurants: $vm.nearbyRestaurants)
+                .presentationCornerRadius(20)
+                .presentationDetents([.height(150),.medium,.large])
+                .presentationBackgroundInteraction(
+                    .enabled(upThrough: .medium)
+                )
+                .interactiveDismissDisabled()
+                .background(Color.clear)
+        })
         .overlay(alignment: .topLeading, content: {
             ToolBar
         })
         .alert(isPresented: $vm.showLocationPermissionAlert) {
             LocationPermissionAlert()
+        }
+        .onAppear{
+            vm.getUserLocationAndNearbyRestaurants()
         }
     }
 }
@@ -87,11 +114,12 @@ struct MapView: View {
 extension MapView{
     private var ToolBar:some View{
         VStack{
-            userLocationButton
             mapStyleMenuView
+                .padding(.vertical)
+            userLocationButton
             Spacer()
-            
         }
+        .padding(30)
     }
     private var userLocationButton:some View{
         Button {
@@ -105,7 +133,6 @@ extension MapView{
                 .background(.white)
                 .foregroundColor(.blue)
                 .cornerRadius(10)
-                .padding(.leading,30)
                 .shadow(radius: 10)
         }
     }
@@ -146,12 +173,7 @@ extension MapView{
                     .background(.white)
                     .foregroundColor(.black)
                     .cornerRadius(10)
-                
-                Text("Map Style")
-                    .font(.caption)
-                    .foregroundStyle(.black)
             }
-            .padding(.leading,30)
             .shadow(radius: 10)
         }
     }

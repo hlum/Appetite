@@ -27,7 +27,7 @@ struct Results: Codable {
     }
 }
 
-struct Shop: Codable {
+struct Shop: Codable,Identifiable {
     let id: String
     let name: String
     let address: String
