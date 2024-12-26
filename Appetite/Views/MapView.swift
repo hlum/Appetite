@@ -48,8 +48,24 @@ final class MapViewModel:ObservableObject{
     }
     
 }
+//MapStyleはEquatableじゃないから判定できるようにカスタムで作る
+enum MapStyleCases:Int{
+    case hybrid = 1
+    case standard = 2
+    
+    var label:String{
+        switch self{
+        case .hybrid:
+            "航空写真"
+        case .standard:
+            "標準"
+        }
+    }
+}
 
 struct MapView: View {
+    @State var showMapStyleMenu:Bool = false
+    @AppStorage("mapStyle") var mapStyle:MapStyleCases = .hybrid
     @State var showSearchView:Bool = false
     @StateObject var vm:MapViewModel = MapViewModel()
     var body: some View {
@@ -57,11 +73,11 @@ struct MapView: View {
             Map(position:$vm.cameraPosition){
                 UserAnnotation(anchor: .center)
             }
-            VStack{
-                Spacer()
-                BottomToolBar
-            }
+            .mapStyle(mapStyle == .hybrid ? .hybrid : .standard)
         }
+        .overlay(alignment: .topLeading, content: {
+            ToolBar
+        })
         .alert(isPresented: $vm.showLocationPermissionAlert) {
             LocationPermissionAlert()
         }
@@ -69,25 +85,77 @@ struct MapView: View {
 }
 // MARK: UIComponents
 extension MapView{
-    private var BottomToolBar:some View{
-        HStack{
-            Button {
-                if let userLocation = vm.userLocation{
-                    vm.moveCamera(to:userLocation)
+    private var ToolBar:some View{
+        VStack{
+            userLocationButton
+            mapStyleMenuView
+            Spacer()
+            
+        }
+    }
+    private var userLocationButton:some View{
+        Button {
+            if let userLocation = vm.userLocation{
+                vm.moveCamera(to:userLocation)
+            }
+        } label: {
+            Image(systemName:"paperplane.fill")
+                .font(.system(size: 20))
+                .padding()
+                .background(.white)
+                .foregroundColor(.blue)
+                .cornerRadius(10)
+                .padding(.leading,30)
+                .shadow(radius: 10)
+        }
+    }
+    
+    
+    private var mapStyleMenuView:some View{
+        Menu {
+            menuItemBtn(for: .standard)
+            menuItemBtn(for: .hybrid)
+        } label: {
+            mapStyleMenuButton
+        }
+    }
+    
+    private func menuItemBtn(for style:MapStyleCases)->some View{
+        Button {
+            mapStyle = style
+        } label: {
+            HStack {
+                Text(style.label)
+                if style == mapStyle {
+                    Image(systemName: "checkmark")
+                        .foregroundColor(.blue)
                 }
-            } label: {
-                Image(systemName:"paperplane.fill")
+            }
+        }
+
+    }
+
+    private var mapStyleMenuButton:some View{
+        Button {
+            showMapStyleMenu = true
+        } label: {
+            VStack{
+                Image(systemName: "map.fill")
                     .font(.system(size: 20))
                     .padding()
                     .background(.white)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.black)
                     .cornerRadius(10)
-                    .padding(.leading,30)
-                    .shadow(radius: 10)
+                
+                Text("Map Style")
+                    .font(.caption)
+                    .foregroundStyle(.black)
             }
-            Spacer()
+            .padding(.leading,30)
+            .shadow(radius: 10)
         }
     }
+
 }
 
 //LocationAlert
