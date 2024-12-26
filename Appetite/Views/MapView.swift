@@ -46,10 +46,10 @@ final class MapViewModel:ObservableObject{
         
     }
     
-    func moveCamera(to coordinate:CLLocationCoordinate2D){
+    func moveCamera(to coordinate:CLLocationCoordinate2D,delta:Double = 0.01){
         let span = MKCoordinateSpan(
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01
+            latitudeDelta: delta,
+            longitudeDelta: delta
         )
         let region = MKCoordinateRegion(
             center: coordinate,
@@ -79,6 +79,7 @@ enum MapStyleCases:Int{
 
 struct MapView: View {
     @State var searchText:String = ""
+    @State var selectedRestaurant:Shop? = nil
     @State var showNearbyRestaurantSheet:Bool = true
     @State var showMapStyleMenu:Bool = false
     @AppStorage("mapStyle") var mapStyle:MapStyleCases = .hybrid
@@ -87,6 +88,20 @@ struct MapView: View {
     var body: some View {
         Map(position:$vm.cameraPosition){
             UserAnnotation(anchor: .center)
+            
+            ForEach(vm.nearbyRestaurants) { restaurant in
+                let coordinate = CLLocationCoordinate2D(latitude: restaurant.lat, longitude: restaurant.lon)
+                
+                Annotation("",coordinate: coordinate){
+                    annotationContentView(restaurant: restaurant)
+                        .onTapGesture {
+                            withAnimation(.bouncy) {
+                                selectedRestaurant = restaurant
+                                
+                            }
+                        }
+                }
+            }
         }
         .mapStyle(mapStyle == .hybrid ? .hybrid : .standard)
         .sheet(isPresented: $showNearbyRestaurantSheet, content: {
@@ -178,6 +193,33 @@ extension MapView{
         }
     }
 
+    private func annotationContentView(restaurant:Shop) -> some View{
+        let isSelected = restaurant == selectedRestaurant
+        return VStack(spacing:0){
+            restaurant.genre.image
+                .resizable()
+                .scaledToFit()
+                .frame(
+                    width:isSelected ? 30 : 20,
+                    height:isSelected ? 30 : 20
+                )
+                .foregroundColor(.white)
+                .padding(4)
+                .background(isSelected ? .red :  .orange)
+                .cornerRadius(36)
+                .animation(.bouncy, value: isSelected)
+
+            Image(systemName: "triangle.fill")
+                .resizable()
+                .scaledToFit()
+                .foregroundColor(isSelected ? .red :  .orange)
+                .frame(width: 10, height: 10)
+                .rotationEffect(Angle(degrees: 180))
+                .offset(y:isSelected ? -5 : -3)
+                .animation(.bouncy, value: isSelected)
+        }
+        .shadow(color: isSelected ? .red.opacity(0.5) : .clear, radius: 10, x: 0, y: 0)
+    }
 }
 
 //LocationAlert
@@ -192,3 +234,5 @@ extension MapView{
 #Preview {
     MapView()
 }
+
+

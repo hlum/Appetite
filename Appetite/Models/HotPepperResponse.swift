@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUICore
 
 struct HotPepperResponse: Codable {
     let results: Results
@@ -27,7 +28,12 @@ struct Results: Codable {
     }
 }
 
-struct Shop: Codable,Identifiable {
+struct Shop: Codable,Identifiable,Equatable {
+    //経緯と緯度が同じであれば
+    static func == (lhs: Shop, rhs: Shop) -> Bool {
+        lhs.lat == rhs.lat && lhs.lon == rhs.lon
+    }
+    
     let id: String
     let name: String
     let address: String
@@ -71,11 +77,51 @@ struct Shop: Codable,Identifiable {
         case card
     }
 }
-
 struct Genre: Codable {
     let code: String
     let name: String
+    var image: Image {
+        switch code {
+//        case "G001":
+//            return "izakaya"
+//        case "G002":
+//            return "dining_bar"
+//        case "G003":
+//            return "creative_cuisine"
+//        case "G004":
+//            return "japanese_food"
+//        case "G005":
+//            return "western_food"
+//        case "G006":
+//            return "italian_french"
+//        case "G007":
+//            return "chinese_food"
+//        case "G008":
+//            return "yakiniku"
+//        case "G017":
+//            return "korean_food"
+//        case "G009":
+//            return "asian_ethnic_food"
+//        case "G010":
+//            return "international_cuisine"
+//        case "G011":
+//            return "karaoke_party"
+//        case "G012":
+//            return "bar_cocktail"
+//        case "G013":
+//            return "ramen"
+//        case "G016":
+//            return "okonomiyaki_manjya"
+//        case "G014":
+//            return "cafe_sweets"
+//        case "G015":
+//            return "other_gourmet"
+        default:
+            Image(systemName: "fork.knife.circle")
+        }
+    }
 }
+
 
 struct Budget: Codable {
     let code: String
