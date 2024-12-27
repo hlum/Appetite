@@ -86,32 +86,53 @@ struct MapView: View {
     @State var showSearchView:Bool = false
     @StateObject var vm:MapViewModel = MapViewModel()
     var body: some View {
-        Map(position:$vm.cameraPosition){
-            UserAnnotation(anchor: .center)
-            
-            ForEach(vm.nearbyRestaurants) { restaurant in
-                restaurantAnnotations(restaurant: restaurant)
+        ZStack{
+            Map(position:$vm.cameraPosition){
+                UserAnnotation(anchor: .center)
+                
+                ForEach(vm.nearbyRestaurants) { restaurant in
+                    restaurantAnnotations(restaurant: restaurant)
+                }
             }
-        }
-        .mapStyle(mapStyle == .hybrid ? .hybrid : .standard)
-        .sheet(isPresented: $showNearbyRestaurantSheet, content: {
-            NearbyRestaurantSheetView(nearbyRestaurants: $vm.nearbyRestaurants)
-                .presentationCornerRadius(20)
-                .presentationDetents([.height(150),.medium,.large])
-                .presentationBackgroundInteraction(
-                    .enabled(upThrough: .medium)
-                )
-                .interactiveDismissDisabled()
-                .background(Color.clear)
-        })
-        .overlay(alignment: .topLeading, content: {
-            ToolBar
-        })
-        .alert(isPresented: $vm.showLocationPermissionAlert) {
-            LocationPermissionAlert()
-        }
-        .onAppear{
-            vm.getUserLocationAndNearbyRestaurants()
+            .mapStyle(mapStyle == .hybrid ? .hybrid : .standard)
+            .sheet(isPresented: $showNearbyRestaurantSheet, content: {
+                NearbyRestaurantSheetView(nearbyRestaurants: $vm.nearbyRestaurants)
+                    .presentationCornerRadius(20)
+                    .presentationDetents([.height(150),.medium,.large])
+                    .presentationBackgroundInteraction(
+                        .enabled(upThrough: .medium)
+                    )
+                    .interactiveDismissDisabled()
+                    .background(Color.clear)
+            })
+            .overlay(alignment: .topLeading, content: {
+                ToolBar
+            })
+            .alert(isPresented: $vm.showLocationPermissionAlert) {
+                LocationPermissionAlert()
+            }
+            .onAppear{
+                vm.getUserLocationAndNearbyRestaurants()
+            }
+            .onChange(of: selectedRestaurant) { _, newValue in
+                showNearbyRestaurantSheet = newValue == nil
+            }
+            VStack{
+                Spacer()
+                ForEach(vm.nearbyRestaurants) { restaurant in
+                    if let selectedRestaurant = selectedRestaurant{
+                        if restaurant == selectedRestaurant{
+                            RestaurantPreviewView(restaurant: selectedRestaurant)
+                                .shadow(color: Color.black.opacity(0.6), radius: 20)
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .transition(.asymmetric(
+                                    insertion: .move(edge: .trailing),
+                                    removal: .move(edge: .leading)))
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -190,8 +211,12 @@ extension MapView{
             annotationContentView(restaurant: restaurant)
                 .onTapGesture {
                     withAnimation(.bouncy) {
-                        selectedRestaurant = restaurant
-                        
+                        //すでに選択されているなら外す
+                        if selectedRestaurant == restaurant{
+                            selectedRestaurant = nil
+                        }else{
+                            selectedRestaurant = restaurant
+                        }
                     }
                 }
         }

@@ -11,9 +11,6 @@ import SDWebImageSwiftUI
 struct RestaurantPreviewView: View {
     let restaurant:Shop
     var body: some View {
-        
-        ZStack{
-            Color.black
             HStack(alignment:.bottom,spacing: 0){
                 VStack(alignment:.leading,spacing: 16){
                     imageSection
@@ -47,8 +44,7 @@ struct RestaurantPreviewView: View {
                     .fill(.white)
                     .offset(y:65)
             )
-            .cornerRadius(10)
-        }
+            .cornerRadius(30)
 
     }
 }
@@ -94,14 +90,11 @@ extension RestaurantPreviewView{
             openTime
             
             Text(restaurant.address)
-                .font(.subheadline)
+                .font(.system(size: 10))
+                .textSelection(.enabled)
             Text(restaurant.genre.name)
                 .font(.subheadline)
                 .bold()
-
-           
-            Text(restaurant.budget?.average ?? "")
-                .font(.subheadline)
         }
         .frame(maxWidth: .infinity,alignment: .leading)
 

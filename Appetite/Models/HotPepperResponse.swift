@@ -29,9 +29,8 @@ struct Results: Codable {
 }
 
 struct Shop: Codable,Identifiable,Equatable {
-    //経緯と緯度が同じであれば
     static func == (lhs: Shop, rhs: Shop) -> Bool {
-        lhs.lat == rhs.lat && lhs.lon == rhs.lon
+        lhs.id == rhs.id
     }
     
     let id: String
