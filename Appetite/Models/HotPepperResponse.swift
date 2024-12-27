@@ -48,7 +48,7 @@ struct Shop: Codable,Identifiable,Equatable {
     let stationName: String?
     let ktaiCoupon: Int?
     let budget: Budget?
-    let capacity: Int?
+    let capacity: Capacity?
     let wifi: String?
     let course: String?
     let freeDrink: String?
@@ -76,6 +76,36 @@ struct Shop: Codable,Identifiable,Equatable {
         case card
     }
 }
+
+enum Capacity: Codable {
+    case integer(Int)
+    case string(String)
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let intValue = try? container.decode(Int.self) {
+            self = .integer(intValue)
+        } else if let stringValue = try? container.decode(String.self) {
+            self = .string(stringValue)
+        } else {
+            throw DecodingError.typeMismatch(Capacity.self, DecodingError.Context(
+                codingPath: decoder.codingPath,
+                debugDescription: "Expected Int or String for capacity"
+            ))
+        }
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .integer(let intValue):
+            try container.encode(intValue)
+        case .string(let stringValue):
+            try container.encode(stringValue)
+        }
+    }
+}
+
 struct Genre: Codable {
     let code: String
     let name: String

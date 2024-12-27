@@ -138,7 +138,7 @@ extension RestaurantPreviewView{
                     stationName: "Station A",
                     ktaiCoupon: 10,
                     budget: Budget(code: "1", name: "Affordable", average: "ランチ：～999円、ディナー：3000円～4000円", budgetMemo: "Reasonable"),
-                    capacity: 50,
+                    capacity: .integer(10),
                     wifi: "Available",
                     course: "Yes",
                     freeDrink: "No",

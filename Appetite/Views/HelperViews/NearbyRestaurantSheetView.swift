@@ -36,7 +36,7 @@ struct NearbyRestaurantSheetView: View {
                     stationName: "Station A",
                     ktaiCoupon: 10,
                     budget: Budget(code: "1", name: "Affordable", average: "$20", budgetMemo: "Reasonable"),
-                    capacity: 50,
+                    capacity: .string("10"),
                     wifi: "Available",
                     course: "Yes",
                     freeDrink: "No",

@@ -39,7 +39,7 @@ final class MapViewModel:ObservableObject{
     
     func getNearbyRestaurants(at userCoordinate:CLLocationCoordinate2D){
         let apiCaller = HotPepperAPIClient(apiKey:"4914164be3a0653f")
-        apiCaller.searchShops(lat: userCoordinate.latitude, lon: userCoordinate.longitude,range: 5) { [weak self] result in
+        apiCaller.searchShops(lat: userCoordinate.latitude, lon: userCoordinate.longitude,range: 5,count: 100) { [weak self] result in
                 switch result{
                 case .success(let response):
                     DispatchQueue.main.async {

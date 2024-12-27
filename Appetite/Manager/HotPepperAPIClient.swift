@@ -65,6 +65,7 @@ class HotPepperAPIClient:ObservableObject {
         range: Int? = nil,
         genre: String? = nil,
         budget: String? = nil,
+        count:Int = 10,
         completion: @escaping (Result<HotPepperResponse, Error>) -> Void
     ) {
         guard var urlComponents = URLComponents(string: baseURL)else{
@@ -94,6 +95,7 @@ class HotPepperAPIClient:ObservableObject {
         if let budget = budget {
             queryItems.append(URLQueryItem(name: "budget", value: budget))
         }
+        queryItems.append(URLQueryItem(name: "count", value: String(count)))
         
         urlComponents.queryItems = queryItems
         
@@ -112,16 +114,38 @@ class HotPepperAPIClient:ObservableObject {
                 completion(.failure(CustomErrors.NoDataFound))
                 return
             }
+//            
+//            if let rawJson = String(data: data, encoding: .utf8) {
+//                print("Raw JSON Response: \(rawJson)")
+//            } else {
+//                print("Failed to convert data to string")
+//            }
             
             do {
                 let decoder = JSONDecoder()
-                //HotPepperResponse でカスタムdecode keyを書いてある
+                
+                // HotPepperResponse でカスタムdecode keyを書いてある
                 let response = try decoder.decode(HotPepperResponse.self, from: data)
                 completion(.success(response))
+            } catch let DecodingError.dataCorrupted(context) {
+                print("Data corrupted:", context.debugDescription)
+                print("Coding Path:", context.codingPath)
+
+            } catch let DecodingError.keyNotFound(key, context) {
+                print("Key '\(key.stringValue)' not found:", context.debugDescription)
+                print("Coding Path:", context.codingPath)
+                
+            } catch let DecodingError.typeMismatch(type, context) {
+                print("Type mismatch for type \(type):", context.debugDescription)
+                print("Coding Path:", context.codingPath)
+                
+            } catch let DecodingError.valueNotFound(value, context) {
+                print("Value '\(value)' not found:", context.debugDescription)
+                print("Coding Path:", context.codingPath)
+                
             } catch {
-                completion(.failure(error))
-            }
-        }
+                print("Unknown error:", error.localizedDescription)
+            }        }
         task.resume()
     }
 }
