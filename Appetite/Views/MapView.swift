@@ -15,16 +15,22 @@ final class MapViewModel:ObservableObject{
     @Published var cameraPosition:MapCameraPosition = .automatic
     @Published var userLocation:CLLocationCoordinate2D?
     
+    @Published var fetchedFirstTime:Bool = false
+    
     init(){
         getUserLocationAndNearbyRestaurants()
     }
         
     func getUserLocationAndNearbyRestaurants(){
         locationManger.onLocationUpdate = {[weak self] result in
+            guard let self = self else{return}
             switch result{
             case .success(let userCoordinate):
-                self?.userLocation = userCoordinate
-                self?.getNearbyRestaurants(at: userCoordinate)
+                self.userLocation = userCoordinate
+                if !self.fetchedFirstTime{ //画面が表示した一回目だけ
+                    self.getNearbyRestaurants(at: userCoordinate)
+                    fetchedFirstTime = true
+                }
             case .failure(let error):
                 print(error.localizedDescription)
             }
@@ -33,7 +39,7 @@ final class MapViewModel:ObservableObject{
     
     func getNearbyRestaurants(at userCoordinate:CLLocationCoordinate2D){
         let apiCaller = HotPepperAPIClient(apiKey:"4914164be3a0653f")
-        apiCaller.searchShops(lat: userCoordinate.latitude, lon: userCoordinate.longitude,range: 2) { [weak self] result in
+        apiCaller.searchShops(lat: userCoordinate.latitude, lon: userCoordinate.longitude,range: 5) { [weak self] result in
                 switch result{
                 case .success(let response):
                     DispatchQueue.main.async {
@@ -92,6 +98,9 @@ struct MapView: View {
                 
                 ForEach(vm.nearbyRestaurants) { restaurant in
                     restaurantAnnotations(restaurant: restaurant)
+                }
+                if let userLocation = vm.userLocation{
+                    Marker("User", coordinate: userLocation)
                 }
             }
             .mapStyle(mapStyle == .hybrid ? .hybrid : .standard)
