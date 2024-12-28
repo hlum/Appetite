@@ -14,9 +14,9 @@ struct HotPepperResponse: Codable {
 
 struct Results: Codable {
     let apiVersion: String
-    let resultsAvailable: Int
-    let resultsReturned: String
-    let resultsStart: Int
+    let resultsAvailable: Int?
+    let resultsReturned: String?
+    let resultsStart: Int?
     let shops: [Shop]
     
     enum CodingKeys: String, CodingKey {

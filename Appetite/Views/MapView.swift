@@ -14,6 +14,7 @@ final class MapViewModel:ObservableObject{
     @Published var showLocationPermissionAlert:Bool = false
     @Published var cameraPosition:MapCameraPosition = .automatic
     @Published var userLocation:CLLocationCoordinate2D?
+    @Published var currentSeeingRegion:CLLocationCoordinate2D?
     
     @Published var fetchedFirstTime:Bool = false
     
@@ -28,7 +29,7 @@ final class MapViewModel:ObservableObject{
             case .success(let userCoordinate):
                 self.userLocation = userCoordinate
                 if !self.fetchedFirstTime{ //画面が表示した一回目だけ
-                    self.getNearbyRestaurants(at: userCoordinate)
+                    self.getNearbyRestaurants(at: userCoordinate,count: 40)
                     fetchedFirstTime = true
                 }
             case .failure(let error):
@@ -37,9 +38,9 @@ final class MapViewModel:ObservableObject{
         }
     }
     
-    func getNearbyRestaurants(at userCoordinate:CLLocationCoordinate2D){
+    func getNearbyRestaurants(at userCoordinate:CLLocationCoordinate2D,count:Int = 10){
         let apiCaller = HotPepperAPIClient(apiKey:"4914164be3a0653f")
-        apiCaller.searchShops(lat: userCoordinate.latitude, lon: userCoordinate.longitude,range: 5,count: 100) { [weak self] result in
+        apiCaller.searchShops(lat: userCoordinate.latitude, lon: userCoordinate.longitude,range: 5,count: count) { [weak self] result in
                 switch result{
                 case .success(let response):
                     DispatchQueue.main.async {
@@ -84,9 +85,10 @@ enum MapStyleCases:Int{
 }
 
 struct MapView: View {
+    @StateObject var filterManager = FilterManger()
     @State var searchText:String = ""
     @State var selectedRestaurant:Shop? = nil
-    @State var showNearbyRestaurantSheet:Bool = true
+    @State var showNearbyRestaurantSheet:Bool = false
     @State var showMapStyleMenu:Bool = false
     @AppStorage("mapStyle") var mapStyle:MapStyleCases = .hybrid
     @State var showSearchView:Bool = false
@@ -99,24 +101,28 @@ struct MapView: View {
                 ForEach(vm.nearbyRestaurants) { restaurant in
                     restaurantAnnotations(restaurant: restaurant)
                 }
-                if let userLocation = vm.userLocation{
-                    Marker("User", coordinate: userLocation)
-                }
             }
+            .onMapCameraChange(frequency: .onEnd, { context in
+                vm.currentSeeingRegion = context.camera.centerCoordinate//get the coordinate of the region dragged by user
+            })
             .mapStyle(mapStyle == .hybrid ? .hybrid : .standard)
             .sheet(isPresented: $showNearbyRestaurantSheet, content: {
-                NearbyRestaurantSheetView(nearbyRestaurants: $vm.nearbyRestaurants)
-                    .presentationCornerRadius(20)
-                    .presentationDetents([.height(150),.medium,.large])
-                    .presentationBackgroundInteraction(
-                        .enabled(upThrough: .medium)
-                    )
-                    .interactiveDismissDisabled()
-                    .background(Color.clear)
+                NearbyRestaurantSheetView(nearbyRestaurants: $vm.nearbyRestaurants,cameraPosition:$vm.currentSeeingRegion)
+                        .presentationCornerRadius(20)
+                        .presentationDetents([.height(150),.medium,.large])
+                        .presentationBackgroundInteraction(
+                            .enabled(upThrough: .medium)
+                        )
+                        .interactiveDismissDisabled()
+                        .background(.systemWhite)
             })
             .overlay(alignment: .topLeading, content: {
                 ToolBar
             })
+            .overlay(alignment: .top) {
+                searchBarAndFilters
+            }
+
             .alert(isPresented: $vm.showLocationPermissionAlert) {
                 LocationPermissionAlert()
             }
@@ -147,6 +153,58 @@ struct MapView: View {
 }
 // MARK: UIComponents
 extension MapView{
+    private var searchBarAndFilters:some View{
+        ZStack{
+            VStack{
+                TextField("検索。。。", text: $searchText)
+                    .overlay(alignment: .trailing) {
+                        if !searchText.isEmpty{
+                            Button {
+                                searchText = ""
+                            }label:{
+                                Image(systemName:"xmark.circle")
+                                    .font(.system(size: 25))
+                                    .foregroundStyle(Color.systemBlack)
+                            }
+                        }
+                    }
+                    .padding()
+                    .background(Color.systemWhite)
+                    .cornerRadius(20)
+                    .padding()
+                    .padding(.top,30)
+                    .shadow(radius: 10)
+                
+                ScrollView(.horizontal,showsIndicators: false) {
+                    LazyHStack{
+                        ForEach(Genres.allCases,id:\.self) { genre in
+                            let filterSelected = filterManager.selectedGenres.contains(genre)
+                            Button{
+                                if !filterSelected{
+                                    filterManager.selectedGenres.append(genre)
+                                }else{
+                                    if let index = filterManager.selectedGenres.firstIndex(of: genre){
+                                        filterManager.selectedGenres.remove(at: index)
+                                    }
+                                }
+                            }label:{
+                                Text(genre.name)
+                                    .padding(7)
+                                    .background(filterSelected ? .systemBlack : .systemWhite)
+                                    .foregroundStyle(filterSelected ? .systemWhite : .systemBlack)
+                                    .cornerRadius(10)
+                                    .shadow(radius: 3)
+                            }
+                        }
+                    }
+                    .frame(height:43)
+                }
+                .padding(.leading,30)
+            }
+            .padding(.leading,85)
+        }
+    }
+    
     private var ToolBar:some View{
         VStack{
             mapStyleMenuView
@@ -165,7 +223,7 @@ extension MapView{
             Image(systemName:"paperplane.fill")
                 .font(.system(size: 20))
                 .padding()
-                .background(.white)
+                .background(.systemWhite)
                 .foregroundColor(.blue)
                 .cornerRadius(10)
                 .shadow(radius: 10)
@@ -205,8 +263,8 @@ extension MapView{
                 Image(systemName: "map.fill")
                     .font(.system(size: 20))
                     .padding()
-                    .background(.white)
-                    .foregroundColor(.black)
+                    .background(.systemWhite)
+                    .foregroundColor(.blue)
                     .cornerRadius(10)
             }
             .shadow(radius: 10)
@@ -271,6 +329,10 @@ extension MapView{
 
 #Preview {
     MapView()
+}
+#Preview {
+    MapView()
+        .colorScheme(.dark)
 }
 
 
