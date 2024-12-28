@@ -88,11 +88,8 @@ extension RestaurantPreviewView{
                 .fontWeight(.bold)
             
             openTime
-            
-            Text(restaurant.address)
-                .font(.system(size: 10))
-                .textSelection(.enabled)
-            Text(restaurant.genre.name)
+        
+            Text("\(restaurant.genre.name)\n\(restaurant.subGenre?.name ?? "")")
                 .font(.subheadline)
                 .bold()
         }
@@ -129,7 +126,7 @@ extension RestaurantPreviewView{
                     address: "東京都新宿区百人町１-21-4",
                     lat: 35.6895,
                     lon: 139.6917,
-                    genre: Genre(code: "1", name: "居酒屋"),
+                    genre: Genre(code: "1", name: "居酒屋"), subGenre: SubGenre(name: "ダイニングバー", code: "fadsf"),
                     access: "2 mins from Station",
                     urls: URLs(pc: "https://example.com"),
                     photo: Photo(pc: PCPhoto(l: "large_url", m: "medium_url", s: "small_url")),

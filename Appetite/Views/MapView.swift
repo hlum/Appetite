@@ -14,9 +14,14 @@ final class MapViewModel:ObservableObject{
     @Published var showLocationPermissionAlert:Bool = false
     @Published var cameraPosition:MapCameraPosition = .automatic
     @Published var userLocation:CLLocationCoordinate2D?
-    @Published var currentSeeingRegion:CLLocationCoordinate2D?
-    
+    @Published var currentSeeingRegionCenterCoordinate:CLLocationCoordinate2D?
+    var currentSeeingRegionCenterCoordinateLatDelta:Double = 0.01
+    var currentSeeingRegionCenterCoordinateLonDelta:Double = 0.01
     @Published var fetchedFirstTime:Bool = false
+    
+    @Published var searchedRestaurants:[Shop] = []
+    
+    var showSearchedRestaurants: Bool = false
     
     init(){
         getUserLocationAndNearbyRestaurants()
@@ -39,7 +44,7 @@ final class MapViewModel:ObservableObject{
     }
     
     func getNearbyRestaurants(at userCoordinate:CLLocationCoordinate2D,count:Int = 10){
-        let apiCaller = HotPepperAPIClient(apiKey:"4914164be3a0653f")
+        let apiCaller = HotPepperAPIClient(apiKey:APIKEY.key.rawValue)
         apiCaller.searchShops(lat: userCoordinate.latitude, lon: userCoordinate.longitude,range: 5,count: count) { [weak self] result in
                 switch result{
                 case .success(let response):
@@ -50,7 +55,6 @@ final class MapViewModel:ObservableObject{
                     print(error.localizedDescription)
                 }
             }
-        
     }
     
     func moveCamera(to coordinate:CLLocationCoordinate2D,delta:Double = 0.01){
@@ -69,6 +73,43 @@ final class MapViewModel:ObservableObject{
     }
     
 }
+//MARK: Filtering stuffs
+extension MapViewModel{
+    func searchRestaurantsWithSelectedFilters(budgets selectedBudgets:[Budgets],genres selectedGeneres:[Genres]){
+        guard !selectedBudgets.isEmpty || !selectedGeneres.isEmpty else{
+            searchedRestaurants = []
+            return
+        }
+        if let currentSeeingRegion = currentSeeingRegionCenterCoordinate{
+            HotPepperAPIClient(
+                apiKey: APIKEY.key.rawValue
+            ).searchShops(
+                lat:currentSeeingRegion.latitude,
+                lon:currentSeeingRegion.longitude,
+                range:3,
+                genres:selectedGeneres,
+                budgets: selectedBudgets,
+                count: 100
+                
+            ) {[weak self] result in
+                
+                switch result{
+                case .success(let response):
+                    DispatchQueue.main.async{
+                        self?.searchedRestaurants = response.results.shops
+//                        dump(self?.searchedRestaurants)
+                    }
+                case .failure(let error):
+                    print(error.localizedDescription)
+                }
+                
+            }
+        }else{
+            print("no camera position")
+        }
+    }
+}
+
 //MapStyleはEquatableじゃないから判定できるようにカスタムで作る
 enum MapStyleCases:Int{
     case hybrid = 1
@@ -98,17 +139,18 @@ struct MapView: View {
         ZStack{
             Map(position:$vm.cameraPosition){
                 UserAnnotation(anchor: .center)
-                
-                ForEach(vm.nearbyRestaurants) { restaurant in
+                ForEach(vm.showSearchedRestaurants ? vm.searchedRestaurants : vm.nearbyRestaurants) { restaurant in
                     restaurantAnnotations(restaurant: restaurant)
                 }
             }
             .onMapCameraChange(frequency: .onEnd, { context in
-                vm.currentSeeingRegion = context.camera.centerCoordinate//get the coordinate of the region dragged by user
+                vm.currentSeeingRegionCenterCoordinate = context.camera.centerCoordinate//get the coordinate of the region dragged by user
+                vm.currentSeeingRegionCenterCoordinateLatDelta = context.span.latitudeDelta
+                vm.currentSeeingRegionCenterCoordinateLatDelta = context.span.longitudeDelta
             })
             .mapStyle(mapStyle == .hybrid ? .hybrid : .standard)
             .sheet(isPresented: $showNearbyRestaurantSheet, content: {
-                NearbyRestaurantSheetView(nearbyRestaurants: $vm.nearbyRestaurants,cameraPosition:$vm.currentSeeingRegion)
+                NearbyRestaurantSheetView(nearbyRestaurants: vm.showSearchedRestaurants ? $vm.searchedRestaurants : $vm.nearbyRestaurants, cameraPosition: $vm.currentSeeingRegionCenterCoordinate, showSearchedRestaurants: vm.showSearchedRestaurants)
                         .presentationCornerRadius(20)
                         .presentationDetents([.height(150),.medium,.large])
                         .presentationBackgroundInteraction(
@@ -135,6 +177,18 @@ struct MapView: View {
             .onChange(of: selectedRestaurant) { _, newValue in
                 showNearbyRestaurantSheet = newValue == nil
             }
+            .onChange(of: filterManager.selectedGenres){ _, _ in
+                //フィルタが一つも選択されていない時はFalse
+                vm.showSearchedRestaurants = !filterManager.selectedGenres.isEmpty || !filterManager.selectedBudgets.isEmpty
+                selectedRestaurant = nil//もし選択されてるレストランが条件が変わってリストにない時バグが出るから外しましょう！！
+                vm.searchRestaurantsWithSelectedFilters(budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres)
+            }
+            .onChange(of: filterManager.selectedBudgets){ _, _ in
+                //フィルタが一つも選択されていない時はFalse
+                vm.showSearchedRestaurants = !filterManager.selectedGenres.isEmpty || !filterManager.selectedBudgets.isEmpty
+                selectedRestaurant = nil//もし選択されてるレストランが条件が変わってリストにない時バグが出るから外しましょう！！
+                vm.searchRestaurantsWithSelectedFilters(budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres)
+            }
             .background(.red)
             previewsStack
         }
@@ -145,7 +199,7 @@ extension MapView{
     private var previewsStack:some View{
         VStack{
             Spacer()
-            ForEach(vm.nearbyRestaurants) { restaurant in
+            ForEach(vm.showSearchedRestaurants ? vm.searchedRestaurants : vm.nearbyRestaurants) { restaurant in
                 if let selectedRestaurant = selectedRestaurant{
                     if restaurant == selectedRestaurant{
                         RestaurantPreviewView(restaurant: selectedRestaurant)
@@ -154,7 +208,7 @@ extension MapView{
                             .frame(maxWidth: .infinity)
                             .transition(.asymmetric(
                                 insertion: .move(edge: .trailing),
-                                removal: .move(edge: .leading)))
+                                removal: .move(edge: .bottom)))
                     }
                 }
             }
@@ -291,7 +345,6 @@ extension MapView{
                 }
             }
         }
-
     }
 
     private var mapStyleMenuButton:some View{

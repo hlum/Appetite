@@ -21,4 +21,8 @@ enum Budgets: String,CaseIterable {
     case B012 = "15001～20000円"
     case B013 = "20001～30000円"
     case B014 = "30001円～"
+    
+    var code:String{
+        String(describing: self)
+    }
 }

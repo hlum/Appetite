@@ -35,7 +35,7 @@ final class NearbyRestaurantSheetViewModel: ObservableObject {
             return
         }
         guard let cameraPosition = self.cameraPosition.wrappedValue else{return}
-        HotPepperAPIClient(apiKey: "4914164be3a0653f").searchShops(
+        HotPepperAPIClient(apiKey: APIKEY.key.rawValue).searchShops(
             keyword: searchText,
             lat:cameraPosition.latitude,
             lon: cameraPosition.longitude,
@@ -54,23 +54,25 @@ final class NearbyRestaurantSheetViewModel: ObservableObject {
 }
 
 struct NearbyRestaurantSheetView: View {
-    @Binding var nearbyRestaurants: [Shop]
+    @Binding var restaurantsShowing: [Shop]
     @StateObject private var vm: NearbyRestaurantSheetViewModel
+    var showSearchedRestaurants:Bool
     
-    init(nearbyRestaurants: Binding<[Shop]>,cameraPosition:Binding<CLLocationCoordinate2D?>) {
-        self._nearbyRestaurants = nearbyRestaurants
+    init(nearbyRestaurants: Binding<[Shop]>,cameraPosition:Binding<CLLocationCoordinate2D?>,showSearchedRestaurants:Bool) {
+        self._restaurantsShowing = nearbyRestaurants
         self._vm = StateObject(wrappedValue: NearbyRestaurantSheetViewModel(nearbyRestaurants: nearbyRestaurants, cameraPosition: cameraPosition))
+        self.showSearchedRestaurants = showSearchedRestaurants
     }
     
     var body: some View {
         NavigationStack {
             List {
-                ForEach(nearbyRestaurants) { shop in
+                ForEach(restaurantsShowing) { shop in
                     Text(shop.name)
                         .foregroundStyle(.systemBlack)
                 }
             }
-            .background(.systemWhite)
+            .navigationTitle(showSearchedRestaurants ? "検索結果 \(restaurantsShowing.count)個" : "近所のレストラン一覧")
         }
     }
 }

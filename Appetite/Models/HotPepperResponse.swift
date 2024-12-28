@@ -39,6 +39,7 @@ struct Shop: Codable,Identifiable,Equatable {
     let lat: Double
     let lon: Double
     let genre: Genre
+    let subGenre:SubGenre?
     let access: String
     let urls: URLs
     let photo: Photo
@@ -74,6 +75,7 @@ struct Shop: Codable,Identifiable,Equatable {
         case open, close, parking
         case nonSmoking = "non_smoking"
         case card
+        case subGenre = "sub_genre"
     }
 }
 
@@ -106,6 +108,10 @@ enum Capacity: Codable {
     }
 }
 
+struct SubGenre:Codable{
+    let name:String
+    let code:String
+}
 struct Genre: Codable {
     let code: String
     let name: String
