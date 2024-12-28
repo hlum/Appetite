@@ -8,125 +8,9 @@
 import SwiftUI
 import MapKit
 
-final class MapViewModel:ObservableObject{
-    let locationManger = LocationManager()
-    @Published var nearbyRestaurants:[Shop] = []
-    @Published var showLocationPermissionAlert:Bool = false
-    @Published var cameraPosition:MapCameraPosition = .automatic
-    @Published var userLocation:CLLocationCoordinate2D?
-    @Published var currentSeeingRegionCenterCoordinate:CLLocationCoordinate2D?
-    var currentSeeingRegionCenterCoordinateLatDelta:Double = 0.01
-    var currentSeeingRegionCenterCoordinateLonDelta:Double = 0.01
-    @Published var fetchedFirstTime:Bool = false
-    
-    @Published var searchedRestaurants:[Shop] = []
-    
-    var showSearchedRestaurants: Bool = false
-    
-    init(){
-        getUserLocationAndNearbyRestaurants()
-    }
-        
-    func getUserLocationAndNearbyRestaurants(){
-        locationManger.onLocationUpdate = {[weak self] result in
-            guard let self = self else{return}
-            switch result{
-            case .success(let userCoordinate):
-                self.userLocation = userCoordinate
-                if !self.fetchedFirstTime{ //画面が表示した一回目だけ
-                    self.getNearbyRestaurants(at: userCoordinate,count: 40)
-                    fetchedFirstTime = true
-                }
-            case .failure(let error):
-                print(error.localizedDescription)
-            }
-        }
-    }
-    
-    func getNearbyRestaurants(at userCoordinate:CLLocationCoordinate2D,count:Int = 10){
-        let apiCaller = HotPepperAPIClient(apiKey:APIKEY.key.rawValue)
-        apiCaller.searchShops(lat: userCoordinate.latitude, lon: userCoordinate.longitude,range: 5,count: count) { [weak self] result in
-                switch result{
-                case .success(let response):
-                    DispatchQueue.main.async {
-                        self?.nearbyRestaurants = response.results.shops
-                    }
-                case .failure(let error):
-                    print(error.localizedDescription)
-                }
-            }
-    }
-    
-    func moveCamera(to coordinate:CLLocationCoordinate2D,delta:Double = 0.01){
-        let span = MKCoordinateSpan(
-            latitudeDelta: delta,
-            longitudeDelta: delta
-        )
-        let region = MKCoordinateRegion(
-            center: coordinate,
-            span: span
-        )
-        withAnimation(.easeIn){
-            cameraPosition = .region(region)
-        }
-        
-    }
-    
-}
-//MARK: Filtering stuffs
-extension MapViewModel{
-    func searchRestaurantsWithSelectedFilters(budgets selectedBudgets:[Budgets],genres selectedGeneres:[Genres]){
-        guard !selectedBudgets.isEmpty || !selectedGeneres.isEmpty else{
-            searchedRestaurants = []
-            return
-        }
-        if let currentSeeingRegion = currentSeeingRegionCenterCoordinate{
-            HotPepperAPIClient(
-                apiKey: APIKEY.key.rawValue
-            ).searchShops(
-                lat:currentSeeingRegion.latitude,
-                lon:currentSeeingRegion.longitude,
-                range:3,
-                genres:selectedGeneres,
-                budgets: selectedBudgets,
-                count: 100
-                
-            ) {[weak self] result in
-                
-                switch result{
-                case .success(let response):
-                    DispatchQueue.main.async{
-                        self?.searchedRestaurants = response.results.shops
-//                        dump(self?.searchedRestaurants)
-                    }
-                case .failure(let error):
-                    print(error.localizedDescription)
-                }
-                
-            }
-        }else{
-            print("no camera position")
-        }
-    }
-}
-
-//MapStyleはEquatableじゃないから判定できるようにカスタムで作る
-enum MapStyleCases:Int{
-    case hybrid = 1
-    case standard = 2
-    
-    var label:String{
-        switch self{
-        case .hybrid:
-            "航空写真"
-        case .standard:
-            "標準"
-        }
-    }
-}
-
 //MARK: MapView body
 struct MapView: View {
+    @State var cameraPositionChanged = false
     @StateObject var filterManager = FilterManger()
     @State var searchText:String = ""
     @State var selectedRestaurant:Shop? = nil
@@ -144,9 +28,11 @@ struct MapView: View {
                 }
             }
             .onMapCameraChange(frequency: .onEnd, { context in
+                withAnimation(.bouncy) {
+                    cameraPositionChanged = true
+                }
+                vm.currentSeeingRegionSpan = context.region.span
                 vm.currentSeeingRegionCenterCoordinate = context.camera.centerCoordinate//get the coordinate of the region dragged by user
-                vm.currentSeeingRegionCenterCoordinateLatDelta = context.span.latitudeDelta
-                vm.currentSeeingRegionCenterCoordinateLatDelta = context.span.longitudeDelta
             })
             .mapStyle(mapStyle == .hybrid ? .hybrid : .standard)
             .sheet(isPresented: $showNearbyRestaurantSheet, content: {
@@ -165,7 +51,12 @@ struct MapView: View {
             })
 
             .overlay(alignment: .top) {
-                searchBarAndFilters
+                VStack{
+                    searchBarAndFilters
+                    if cameraPositionChanged{
+                        searchThisAreaButton
+                    }
+                }
             }
 
             .alert(isPresented: $vm.showLocationPermissionAlert) {
@@ -178,16 +69,22 @@ struct MapView: View {
                 showNearbyRestaurantSheet = newValue == nil
             }
             .onChange(of: filterManager.selectedGenres){ _, _ in
-                //フィルタが一つも選択されていない時はFalse
-                vm.showSearchedRestaurants = !filterManager.selectedGenres.isEmpty || !filterManager.selectedBudgets.isEmpty
-                selectedRestaurant = nil//もし選択されてるレストランが条件が変わってリストにない時バグが出るから外しましょう！！
-                vm.searchRestaurantsWithSelectedFilters(budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres)
+                withAnimation{
+                    //フィルタが一つも選択されていない時はFalse
+                    vm.showSearchedRestaurants = !filterManager.selectedGenres.isEmpty || !filterManager.selectedBudgets.isEmpty
+                    selectedRestaurant = nil//もし選択されてるレストランが条件が変わってリストにない時バグが出るから外しましょう！！
+                    
+                    vm.searchRestaurantsWithSelectedFilters(budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres)
+                }
             }
             .onChange(of: filterManager.selectedBudgets){ _, _ in
-                //フィルタが一つも選択されていない時はFalse
-                vm.showSearchedRestaurants = !filterManager.selectedGenres.isEmpty || !filterManager.selectedBudgets.isEmpty
-                selectedRestaurant = nil//もし選択されてるレストランが条件が変わってリストにない時バグが出るから外しましょう！！
-                vm.searchRestaurantsWithSelectedFilters(budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres)
+                withAnimation{
+                    //フィルタが一つも選択されていない時はFalse
+                    vm.showSearchedRestaurants = !filterManager.selectedGenres.isEmpty || !filterManager.selectedBudgets.isEmpty
+                    selectedRestaurant = nil//もし選択されてるレストランが条件が変わってリストにない時バグが出るから外しましょう！！
+                    
+                    vm.searchRestaurantsWithSelectedFilters(budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres)
+                }
             }
             .background(.red)
             previewsStack
@@ -196,6 +93,26 @@ struct MapView: View {
 }
 // MARK: UIComponents
 extension MapView{
+    private var searchThisAreaButton:some View{
+        VStack{
+            Button{
+                withAnimation(.bouncy){
+                    vm.searchRestaurantsWithSelectedFilters(budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres)
+                    cameraPositionChanged = false
+                }
+            }label:{
+                Text("このエリアを検索")
+                    .padding()
+                    .background(Color.black.opacity(0.7))
+                    .cornerRadius(30)
+                    .shadow(radius: 3)
+                    .foregroundStyle(Color.white)
+            }
+        }
+        .frame(maxHeight:.infinity,alignment:.top)
+        .transition(.asymmetric(insertion: .move(edge: .top), removal: .move(edge: .top)))
+    }
+    
     private var previewsStack:some View{
         VStack{
             Spacer()
