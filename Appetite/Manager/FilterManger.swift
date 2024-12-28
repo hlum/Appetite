@@ -9,4 +9,5 @@ import Foundation
 
 final class FilterManger:ObservableObject{
     @Published var selectedGenres:[Genres] = []
+    @Published var selectedBudgets:[Budgets] = []
 }

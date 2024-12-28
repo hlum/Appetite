@@ -71,7 +71,6 @@ struct NearbyRestaurantSheetView: View {
                 }
             }
             .background(.systemWhite)
-            .searchable(text: $vm.searchText, prompt: "検索")
         }
     }
 }

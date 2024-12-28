@@ -84,11 +84,12 @@ enum MapStyleCases:Int{
     }
 }
 
+//MARK: MapView body
 struct MapView: View {
     @StateObject var filterManager = FilterManger()
     @State var searchText:String = ""
     @State var selectedRestaurant:Shop? = nil
-    @State var showNearbyRestaurantSheet:Bool = false
+    @State var showNearbyRestaurantSheet:Bool = true
     @State var showMapStyleMenu:Bool = false
     @AppStorage("mapStyle") var mapStyle:MapStyleCases = .hybrid
     @State var showSearchView:Bool = false
@@ -116,9 +117,11 @@ struct MapView: View {
                         .interactiveDismissDisabled()
                         .background(.systemWhite)
             })
-            .overlay(alignment: .topLeading, content: {
+            .overlay(alignment: .bottomTrailing, content: {
                 ToolBar
+                    .padding(.bottom,150)
             })
+
             .overlay(alignment: .top) {
                 searchBarAndFilters
             }
@@ -132,27 +135,31 @@ struct MapView: View {
             .onChange(of: selectedRestaurant) { _, newValue in
                 showNearbyRestaurantSheet = newValue == nil
             }
-            VStack{
-                Spacer()
-                ForEach(vm.nearbyRestaurants) { restaurant in
-                    if let selectedRestaurant = selectedRestaurant{
-                        if restaurant == selectedRestaurant{
-                            RestaurantPreviewView(restaurant: selectedRestaurant)
-                                .shadow(color: Color.black.opacity(0.6), radius: 20)
-                                .padding()
-                                .frame(maxWidth: .infinity)
-                                .transition(.asymmetric(
-                                    insertion: .move(edge: .trailing),
-                                    removal: .move(edge: .leading)))
-                        }
-                    }
-                }
-            }
+            .background(.red)
+            previewsStack
         }
     }
 }
 // MARK: UIComponents
 extension MapView{
+    private var previewsStack:some View{
+        VStack{
+            Spacer()
+            ForEach(vm.nearbyRestaurants) { restaurant in
+                if let selectedRestaurant = selectedRestaurant{
+                    if restaurant == selectedRestaurant{
+                        RestaurantPreviewView(restaurant: selectedRestaurant)
+                            .shadow(color: Color.black.opacity(0.6), radius: 20)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .transition(.asymmetric(
+                                insertion: .move(edge: .trailing),
+                                removal: .move(edge: .leading)))
+                    }
+                }
+            }
+        }
+    }
     private var searchBarAndFilters:some View{
         ZStack{
             VStack{
@@ -171,38 +178,71 @@ extension MapView{
                     .padding()
                     .background(Color.systemWhite)
                     .cornerRadius(20)
-                    .padding()
-                    .padding(.top,30)
                     .shadow(radius: 10)
                 
-                ScrollView(.horizontal,showsIndicators: false) {
-                    LazyHStack{
-                        ForEach(Genres.allCases,id:\.self) { genre in
-                            let filterSelected = filterManager.selectedGenres.contains(genre)
-                            Button{
-                                if !filterSelected{
-                                    filterManager.selectedGenres.append(genre)
-                                }else{
-                                    if let index = filterManager.selectedGenres.firstIndex(of: genre){
-                                        filterManager.selectedGenres.remove(at: index)
-                                    }
-                                }
-                            }label:{
-                                Text(genre.name)
-                                    .padding(7)
-                                    .background(filterSelected ? .systemBlack : .systemWhite)
-                                    .foregroundStyle(filterSelected ? .systemWhite : .systemBlack)
-                                    .cornerRadius(10)
-                                    .shadow(radius: 3)
+                genresFilter
+                budgetFilters
+                
+            }
+            .padding(.horizontal)
+        }
+    }
+    
+    private var genresFilter:some View{
+        ScrollView(.horizontal,showsIndicators: false) {
+            LazyHStack{
+                ForEach(Genres.allCases,id:\.self) { genre in
+                    let filterSelected = filterManager.selectedGenres.contains(genre)
+                    Button{
+                        if !filterSelected{
+                            filterManager.selectedGenres.append(genre)
+                        }else{
+                            if let index = filterManager.selectedGenres.firstIndex(of: genre){
+                                filterManager.selectedGenres.remove(at: index)
                             }
                         }
+                    }label:{
+                        Text(genre.name)
+                            .font(.caption)
+                            .padding(7)
+                            .background(filterSelected ? .systemBlack : .systemWhite)
+                            .foregroundStyle(filterSelected ? .systemWhite : .systemBlack)
+                            .cornerRadius(10)
+                            .shadow(radius: 3)
                     }
-                    .frame(height:43)
                 }
-                .padding(.leading,30)
             }
-            .padding(.leading,85)
+            .frame(height:43)
         }
+    }
+    
+    private var budgetFilters:some View{
+        ScrollView(.horizontal,showsIndicators: false) {
+            LazyHStack{
+                ForEach(Budgets.allCases,id:\.self) { budget in
+                    let filterSelected = filterManager.selectedBudgets.contains(budget)
+                    Button{
+                        if !filterSelected{
+                            filterManager.selectedBudgets.append(budget)
+                        }else{
+                            if let index = filterManager.selectedBudgets.firstIndex(of: budget){
+                                filterManager.selectedBudgets.remove(at: index)
+                            }
+                        }
+                    }label:{
+                        Text(budget.rawValue)
+                            .padding(7)
+                            .font(.caption)
+                            .background(filterSelected ? .systemBlack : .systemWhite)
+                            .foregroundStyle(filterSelected ? .systemWhite : .systemBlack)
+                            .cornerRadius(10)
+                            .shadow(radius: 3)
+                    }
+                }
+            }
+            .frame(height:40)
+        }
+    
     }
     
     private var ToolBar:some View{
@@ -210,7 +250,6 @@ extension MapView{
             mapStyleMenuView
                 .padding(.vertical)
             userLocationButton
-            Spacer()
         }
         .padding(30)
     }
