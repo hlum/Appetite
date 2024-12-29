@@ -16,56 +16,142 @@ import Foundation
  budget
  */
 
-class HotPepperAPIClient:ObservableObject {
+class HotPepperAPIClient: ObservableObject {
     private let baseURL = "https://webservice.recruit.co.jp/hotpepper/gourmet/v1/"
     private let apiKey: String
+    private let maxResultsPerPage = 100
     
     init(apiKey: String) {
         self.apiKey = apiKey
     }
     
-    /// ホットペッパーグルメサーチAPIを使用して、指定された条件に基づいて飲食店を検索します。
-    ///
-    /// この関数は非同期で実行され、検索結果はcompletionハンドラを通じて返されます。
-    /// 検索条件は全て任意パラメータとして指定可能で、複数の条件を組み合わせることができます。
+    /// ホットペッパーグルメサーチAPIを使用して、指定された最大件数まで検索結果を取得します。
     ///
     /// - Parameters:
     ///   - keyword: 検索キーワード
-    ///             店名、住所、駅名、お店ジャンルなどのフリーワード検索が可能です。
     ///   - lat: 緯度
-    ///         位置情報による検索を行う場合の緯度を指定します。
     ///   - lon: 経度
-    ///         位置情報による検索を行う場合の経度を指定します。
     ///   - range: 検索範囲
-    ///          位置情報による検索時の範囲を指定します。
-    ///          1: 300m
-    ///          2: 500m
-    ///          3: 1000m (デフォルト)
-    ///          4: 2000m
-    ///          5: 3000m
-    ///   - genre: お店ジャンルコード
-    ///          ジャンルによる絞り込み検索を行う場合に指定します。
-    ///   - budget: 予算コード
-    ///           予算による絞り込み検索を行う場合に指定します。
-    ///   - completion: 検索結果を受け取るコールバック
-    ///               `.success(HotPepperResponse)`: 検索成功時のレスポンス
-    ///               `.failure(Error)`: エラー発生時の詳細
+    ///   - genres: ジャンルコード配列
+    ///   - budgets: 予算コード配列
+    ///   - maxResults: 取得する最大件数 (nilの場合は全件取得)
+    ///   - completion: 検索結果を含むレスポンス
     ///
-    /// - Note:
-    ///   - 位置情報検索を行う場合は、lat（緯度）とlon（経度）の両方を指定する必要があります。
-    ///   - エラーの種類:
-    ///     - `CustomErrors.InvalidURL`: URLの生成に失敗
-    ///     - `CustomErrors.NoDataFound`: データが取得できない
-    ///     - その他のネットワークエラーやデコードエラー
-    ///
-    func searchShops(
+    func searchAllShops(
         keyword: String? = nil,
         lat: Double? = nil,
         lon: Double? = nil,
         range: Int? = nil,
         genres: [Genres] = [],
         budgets: [Budgets] = [],
-        count: Int = 10,
+        maxResults: Int = 100,
+        completion: @escaping (Result<HotPepperResponse, Error>) -> Void
+    ) {
+        // First, get total available results count
+        searchShops(
+            keyword: keyword,
+            lat: lat,
+            lon: lon,
+            range: range,
+            genres: genres,
+            budgets: budgets,
+            start: 1,
+            count: 1
+        ) { result in
+//            guard let self = self else{
+//                print("lose the object")
+//                return
+//            }
+            switch result {
+            case .success(let initialResponse):
+                var totalResults = initialResponse.results.resultsAvailable ?? 0
+                
+                // If maxResults is less than available results, use that instead
+                totalResults = min(totalResults, maxResults)
+                
+                
+                self.fetchAllPages(
+                    totalResults: totalResults,
+                    keyword: keyword,
+                    lat: lat,
+                    lon: lon,
+                    range: range,
+                    genres: genres,
+                    budgets: budgets,
+                    completion: completion
+                )
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    private func fetchAllPages(
+        totalResults: Int,
+        keyword: String?,
+        lat: Double?,
+        lon: Double?,
+        range: Int?,
+        genres: [Genres],
+        budgets: [Budgets],
+        completion: @escaping (Result<HotPepperResponse, Error>) -> Void
+    ) {
+        let numberOfPages = Int(ceil(Double(totalResults) / Double(maxResultsPerPage)))
+        var allShops: [Shop] = []
+        var completedRequests = 0
+        var hasError = false
+        
+        for page in 0..<numberOfPages {
+            let start = page * maxResultsPerPage + 1
+            let remainingResults = totalResults - (page * maxResultsPerPage)
+            let countForThisPage = min(maxResultsPerPage, remainingResults)
+            
+            searchShops(
+                keyword: keyword,
+                lat: lat,
+                lon: lon,
+                range: range,
+                genres: genres,
+                budgets: budgets,
+                start: start,
+                count: countForThisPage
+            ) { result in
+                switch result {
+                case .success(let response):
+                    allShops.append(contentsOf: response.results.shops)
+                case .failure(let error):
+                    hasError = true
+                    completion(.failure(error))
+                    return
+                }
+                
+                completedRequests += 1
+                
+                if completedRequests == numberOfPages && !hasError {
+                    // Create final response with all shops
+                    let finalResponse = HotPepperResponse(results: Results(
+                        apiVersion: "1.26",
+                        resultsAvailable: totalResults,
+                        resultsReturned: String(allShops.count),
+                        resultsStart: 1,
+                        shops: allShops
+                    ))
+                    completion(.success(finalResponse))
+                }
+            }
+        }
+    }
+    
+    /// Internal search function with start parameter
+    private func searchShops(
+        keyword: String? = nil,
+        lat: Double? = nil,
+        lon: Double? = nil,
+        range: Int? = nil,
+        genres: [Genres] = [],
+        budgets: [Budgets] = [],
+        start: Int,
+        count: Int,
         completion: @escaping (Result<HotPepperResponse, Error>) -> Void
     ) {
         guard var urlComponents = URLComponents(string: baseURL) else {
@@ -73,14 +159,13 @@ class HotPepperAPIClient:ObservableObject {
             return
         }
         
-        // Build query items array
         var queryItems = [
             URLQueryItem(name: "key", value: apiKey),
             URLQueryItem(name: "format", value: "json"),
+            URLQueryItem(name: "start", value: String(start)),
             URLQueryItem(name: "count", value: String(count))
         ]
         
-        // Add optional parameters
         if let keyword = keyword {
             queryItems.append(URLQueryItem(name: "keyword", value: keyword))
         }
@@ -115,7 +200,6 @@ class HotPepperAPIClient:ObservableObject {
             completion(.failure(CustomErrors.InvalidURL))
             return
         }
-        
         print(url)
         
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
@@ -133,29 +217,7 @@ class HotPepperAPIClient:ObservableObject {
                 let decoder = JSONDecoder()
                 let response = try decoder.decode(HotPepperResponse.self, from: data)
                 completion(.success(response))
-                
-            } catch let DecodingError.dataCorrupted(context) {
-                print("Data corrupted:", context.debugDescription)
-                print("Coding Path:", context.codingPath)
-                completion(.failure(DecodingError.dataCorrupted(context)))
-                
-            } catch let DecodingError.keyNotFound(key, context) {
-                print("Key '\(key.stringValue)' not found:", context.debugDescription)
-                print("Coding Path:", context.codingPath)
-                completion(.failure(DecodingError.keyNotFound(key, context)))
-                
-            } catch let DecodingError.typeMismatch(type, context) {
-                print("Type mismatch for type \(type):", context.debugDescription)
-                print("Coding Path:", context.codingPath)
-                completion(.failure(DecodingError.typeMismatch(type, context)))
-                
-            } catch let DecodingError.valueNotFound(value, context) {
-                print("Value '\(value)' not found:", context.debugDescription)
-                print("Coding Path:", context.codingPath)
-                completion(.failure(DecodingError.valueNotFound(value, context)))
-                
             } catch {
-                print("Unknown error:", error.localizedDescription)
                 completion(.failure(error))
             }
         }

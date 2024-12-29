@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum Budgets: String,CaseIterable {
+enum Budgets: String,FilterItemProtocol {
     case B009 = "～500円"
     case B010 = "501～1000円"
     case B011 = "1001～1500円"
@@ -21,6 +21,10 @@ enum Budgets: String,CaseIterable {
     case B012 = "15001～20000円"
     case B013 = "20001～30000円"
     case B014 = "30001円～"
+    
+    var name:String{
+        self.rawValue
+    }
     
     var code:String{
         String(describing: self)

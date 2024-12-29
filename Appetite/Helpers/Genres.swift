@@ -5,7 +5,7 @@
 //  Created by Hlwan Aung Phyo on 12/28/24.
 //
 
-enum Genres: String, CaseIterable {
+enum Genres: String, FilterItemProtocol {
     case G001 = "居酒屋"
     case G002 = "ダイニングバー・バル"
     case G003 = "創作料理"
@@ -29,24 +29,6 @@ enum Genres: String, CaseIterable {
     }
 
     var code: String {
-        switch self {
-        case .G001: return "G001"
-        case .G002: return "G002"
-        case .G003: return "G003"
-        case .G004: return "G004"
-        case .G005: return "G005"
-        case .G006: return "G006"
-        case .G007: return "G007"
-        case .G008: return "G008"
-        case .G017: return "G017"
-        case .G009: return "G009"
-        case .G010: return "G010"
-        case .G011: return "G011"
-        case .G012: return "G012"
-        case .G013: return "G013"
-        case .G016: return "G016"
-        case .G014: return "G014"
-        case .G015: return "G015"
-        }
+        return String(describing: self)
     }
 }

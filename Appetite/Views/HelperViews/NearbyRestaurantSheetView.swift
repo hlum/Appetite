@@ -36,11 +36,10 @@ final class NearbyRestaurantSheetViewModel: ObservableObject {
             return
         }
         guard let cameraPosition = self.cameraPosition.wrappedValue else{return}
-        HotPepperAPIClient(apiKey: APIKEY.key.rawValue).searchShops(
+        HotPepperAPIClient(apiKey: APIKEY.key.rawValue).searchAllShops(
             keyword: searchText,
             lat:cameraPosition.latitude,
-            lon: cameraPosition.longitude,
-            count: 100
+            lon: cameraPosition.longitude
         ) { [weak self] result in
             DispatchQueue.main.async {
                 switch result{

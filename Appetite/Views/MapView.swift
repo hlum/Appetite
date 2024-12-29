@@ -358,7 +358,7 @@ extension MapView{
             vm.showSearchedRestaurants = !filterManager.selectedGenres.isEmpty || !filterManager.selectedBudgets.isEmpty
             vm.selectedRestaurant = nil//もし選択されてるレストランが条件が変わってリストにない時バグが出るから外しましょう！！
             
-            vm.searchRestaurantsWithSelectedFilters(budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres)
+            vm.searchRestaurantsWithSelectedFilters(keyword: vm.searchText,budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres)
         }
     }
 }
