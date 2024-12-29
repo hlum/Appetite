@@ -64,7 +64,7 @@ extension RestaurantPreviewView{
                             .cornerRadius(10)
                     })
                     .resizable()
-                    .scaledToFill()
+                    .scaledToFit()
                     .frame(width:100,height:100)
                     .cornerRadius(10)
             }else{

@@ -65,52 +65,59 @@ class HotPepperAPIClient:ObservableObject {
         range: Int? = nil,
         genres: [Genres] = [],
         budgets: [Budgets] = [],
-        count:Int = 10,
+        count: Int = 10,
         completion: @escaping (Result<HotPepperResponse, Error>) -> Void
     ) {
-        guard var urlComponents = URLComponents(string: baseURL)else{
+        guard var urlComponents = URLComponents(string: baseURL) else {
             completion(.failure(CustomErrors.InvalidURL))
             return
         }
-        //Baseパラメータ
-        var queryItems:[String] = [
-            "key=\(apiKey)",
-            "format=json"
+        
+        // Build query items array
+        var queryItems = [
+            URLQueryItem(name: "key", value: apiKey),
+            URLQueryItem(name: "format", value: "json"),
+            URLQueryItem(name: "count", value: String(count))
         ]
         
-        // 任意パラメータ
+        // Add optional parameters
         if let keyword = keyword {
-              queryItems.append("keyword=\(keyword)")
-          }
-        if let lat = lat {
-              queryItems.append("lat=\(lat)")
-          }
-          if let lon = lon {
-              queryItems.append("lng=\(lon)")
-          }
-        if let range = range {
-            queryItems.append("range=\(range)")
+            queryItems.append(URLQueryItem(name: "keyword", value: keyword))
         }
-        if !genres.isEmpty {
-            let genresCode = genres.map { $0.code }.joined(separator: "&")
-            queryItems.append("genre=\(genresCode)")
-        }
-        if !budgets.isEmpty {
-            let budgetsCode = budgets.map { $0.code }.joined(separator: "&")
-            queryItems.append("budget=\(budgetsCode)")
-        }
-        queryItems.append("count=\(count)")
-        // Assemble the query manually
-        let query = queryItems.joined(separator: "&")
-        urlComponents.query = query
         
-        // URL作成
+        if let lat = lat {
+            queryItems.append(URLQueryItem(name: "lat", value: String(lat)))
+        }
+        
+        if let lon = lon {
+            queryItems.append(URLQueryItem(name: "lng", value: String(lon)))
+        }
+        
+        if let range = range {
+            queryItems.append(URLQueryItem(name: "range", value: String(range)))
+        }
+        
+        if !genres.isEmpty {
+            for genre in genres {
+                queryItems.append(URLQueryItem(name: "genre", value: genre.code))
+            }
+        }
+        
+        if !budgets.isEmpty {
+            for budget in budgets {
+                queryItems.append(URLQueryItem(name: "budget", value: budget.code))
+            }
+        }
+        
+        urlComponents.queryItems = queryItems
+        
         guard let url = urlComponents.url else {
             completion(.failure(CustomErrors.InvalidURL))
             return
         }
+        
         print(url)
-
+        
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             if let error = error {
                 completion(.failure(error))
@@ -121,40 +128,37 @@ class HotPepperAPIClient:ObservableObject {
                 completion(.failure(CustomErrors.NoDataFound))
                 return
             }
-//            https://webservice.recruit.co.jp/hotpepper/gourmet/v1/?key=4914164be3a0653f&format=json&lat=38.63714199999998&lng=137.68066399999995
-
-//            if let rawJson = String(data: data, encoding: .utf8) {
-//                print("Raw JSON Response: \(rawJson)")
-//            } else {
-//                print("Failed to convert data to string")
-//            }
             
             do {
                 let decoder = JSONDecoder()
-                
-                // HotPepperResponse でカスタムdecode keyを書いてある
                 let response = try decoder.decode(HotPepperResponse.self, from: data)
                 completion(.success(response))
                 
             } catch let DecodingError.dataCorrupted(context) {
                 print("Data corrupted:", context.debugDescription)
                 print("Coding Path:", context.codingPath)
-
+                completion(.failure(DecodingError.dataCorrupted(context)))
+                
             } catch let DecodingError.keyNotFound(key, context) {
                 print("Key '\(key.stringValue)' not found:", context.debugDescription)
                 print("Coding Path:", context.codingPath)
+                completion(.failure(DecodingError.keyNotFound(key, context)))
                 
             } catch let DecodingError.typeMismatch(type, context) {
                 print("Type mismatch for type \(type):", context.debugDescription)
                 print("Coding Path:", context.codingPath)
+                completion(.failure(DecodingError.typeMismatch(type, context)))
                 
             } catch let DecodingError.valueNotFound(value, context) {
                 print("Value '\(value)' not found:", context.debugDescription)
                 print("Coding Path:", context.codingPath)
+                completion(.failure(DecodingError.valueNotFound(value, context)))
                 
             } catch {
                 print("Unknown error:", error.localizedDescription)
-            }        }
+                completion(.failure(error))
+            }
+        }
         task.resume()
     }
 }

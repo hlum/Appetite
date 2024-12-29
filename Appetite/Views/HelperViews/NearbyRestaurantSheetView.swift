@@ -8,6 +8,7 @@
 import SwiftUI
 import MapKit
 import Combine
+import SDWebImageSwiftUI
 
 final class NearbyRestaurantSheetViewModel: ObservableObject {
     @Published var searchText: String = ""
@@ -56,56 +57,101 @@ final class NearbyRestaurantSheetViewModel: ObservableObject {
 struct NearbyRestaurantSheetView: View {
     @Binding var restaurantsShowing: [Shop]
     @StateObject private var vm: NearbyRestaurantSheetViewModel
-    var showSearchedRestaurants:Bool
-    
-    init(nearbyRestaurants: Binding<[Shop]>,cameraPosition:Binding<CLLocationCoordinate2D?>,showSearchedRestaurants:Bool) {
+    @Binding var selectedRestaurant:Shop?
+    init(
+        nearbyRestaurants:Binding<[Shop]>,
+        cameraPosition:Binding<CLLocationCoordinate2D?>,
+        selectedRestaurant:Binding<Shop?>
+    ) {
         self._restaurantsShowing = nearbyRestaurants
         self._vm = StateObject(wrappedValue: NearbyRestaurantSheetViewModel(nearbyRestaurants: nearbyRestaurants, cameraPosition: cameraPosition))
-        self.showSearchedRestaurants = showSearchedRestaurants
+        self._selectedRestaurant = selectedRestaurant
     }
     
     var body: some View {
         NavigationStack {
             List {
-                ForEach(restaurantsShowing) { shop in
-                    Text(shop.name)
-                        .foregroundStyle(.systemBlack)
+                Section{
+                    LazyVStack{
+                        ForEach(restaurantsShowing) { shop in
+                            listItemView(for: shop)
+                                .onTapGesture {
+                                    selectedRestaurant = shop
+                                }
+                        }
+                    }
+                }header: {
+                    Text("レストラン一覧")
                 }
             }
-            .navigationTitle(showSearchedRestaurants ? "検索結果 \(restaurantsShowing.count)個" : "近所のレストラン一覧")
+            //            .navigationTitle(showSearchedRestaurants ? "検索結果 \(restaurantsShowing.count)個" : "近所のレストラン一覧")
         }
     }
 }
 
-//#Preview{
-//    let dummyShops = [
-//                Shop(
-//                    id: "1",
-//                    name: "Restaurant A",
-//                    address: "123 A Street, City, Country",
-//                    lat: 35.6895,
-//                    lon: 139.6917,
-//                    genre: Genre(code: "1", name: "Japanese"),
-//                    access: "2 mins from Station",
-//                    urls: URLs(pc: "https://example.com"),
-//                    photo: Photo(pc: PCPhoto(l: "large_url", m: "medium_url", s: "small_url")),
-//                    logoImage: "logoA.png",
-//                    nameKana: "レストラン A",
-//                    stationName: "Station A",
-//                    ktaiCoupon: 10,
-//                    budget: Budget(code: "1", name: "Affordable", average: "$20", budgetMemo: "Reasonable"),
-//                    capacity: .string("10"),
-//                    wifi: "Available",
-//                    course: "Yes",
-//                    freeDrink: "No",
-//                    freeFood: "Yes",
-//                    privateRoom: "Yes",
-//                    open: "10:00 AM",
-//                    close: "9:00 PM",
-//                    parking: "Yes",
-//                    nonSmoking: "Yes",
-//                    card: "Visa"
-//                )
-//            ]
-//    NearbyRestaurantSheetView(nearbyRestaurants: .constant(dummyShops))
-//        }
+
+extension NearbyRestaurantSheetView{
+    private func listItemView(for shop:Shop) -> some View{
+        HStack{
+            if let logoImage = shop.logoImage,
+               let url = URL(string: logoImage){
+                WebImage(url: url)
+                    .placeholder(content: {
+                        shop.genre.image
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width:50,height:50)
+                            .cornerRadius(10)
+                    })
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width:50,height:50)
+                    .cornerRadius(10)
+                Spacer()
+                VStack{
+                    Text(shop.name)
+                        .foregroundStyle(.systemBlack)
+                        .padding()
+                        .background(Color.systemWhite)
+                        .cornerRadius(10)
+                }
+                Spacer()
+            }
+        }
+
+    }
+}
+
+#Preview {
+    let dummyShops = [
+                Shop(
+                    id: "1",
+                    name: "韓国居酒屋 板橋冷麺 新大久保",
+                    address: "東京都新宿区百人町１-21-4",
+                    lat: 35.6895,
+                    lon: 139.6917,
+                    genre: Genre(code: "1", name: "居酒屋"), subGenre: SubGenre(name: "ダイニングバー", code: "fadsf"),
+                    access: "2 mins from Station",
+                    urls: URLs(pc: "https://example.com"),
+                    photo: Photo(pc: PCPhoto(l: "large_url", m: "medium_url", s: "small_url")),
+                    logoImage: "logoA.png",
+                    nameKana: "レストラン A",
+                    stationName: "Station A",
+                    ktaiCoupon: 10,
+                    budget: Budget(code: "1", name: "Affordable", average: "ランチ：～999円、ディナー：3000円～4000円", budgetMemo: "Reasonable"),
+                    capacity: .integer(10),
+                    wifi: "Available",
+                    course: "Yes",
+                    freeDrink: "No",
+                    freeFood: "Yes",
+                    privateRoom: "Yes",
+                    open: "月～日、祝日: 11:00～15:30 （料理L.O. 15:00）17:00～23:00",
+                    close: "9:00 PM",
+                    parking: "Yes",
+                    nonSmoking: "Yes",
+                    card: "Visa"
+                )
+            ]
+    NearbyRestaurantSheetView(nearbyRestaurants: .constant(dummyShops), cameraPosition: .constant(CLLocationCoordinate2D(latitude: 35.7020691, longitude: 139.7753269)), selectedRestaurant: .constant(dummyShops[0]))
+    }
+

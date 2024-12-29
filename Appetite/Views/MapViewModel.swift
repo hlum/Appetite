@@ -8,8 +8,13 @@
 import Foundation
 import _MapKit_SwiftUI
 import SwiftUI
+import Combine
 
 final class MapViewModel:ObservableObject{
+    var filterManager:FilterManger?
+    @Published var selectedRestaurant:Shop? = nil
+    @Published var showNearbyRestaurantSheet:Bool = true
+    @Published var searchText:String = ""
     let locationManger = LocationManager()
     @Published var nearbyRestaurants:[Shop] = []
     @Published var showLocationPermissionAlert:Bool = false
@@ -18,13 +23,20 @@ final class MapViewModel:ObservableObject{
     @Published var currentSeeingRegionCenterCoordinate:CLLocationCoordinate2D?
     var currentSeeingRegionSpan:MKCoordinateSpan = MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
     @Published var fetchedFirstTime:Bool = false
-    
+    private var cancellables = Set<AnyCancellable>()
+
     @Published var searchedRestaurants:[Shop] = []
     
     var showSearchedRestaurants: Bool = false
     
-    init(){
+    init(filterManager:FilterManger?){
+        self.filterManager = filterManager
+        addSubscriberToSearchText()
         getUserLocationAndNearbyRestaurants()
+    }
+    
+    func setUp(_ filterManager:FilterManger){//passed the environment object from the view
+        self.filterManager = filterManager
     }
         
     func getUserLocationAndNearbyRestaurants(){
@@ -34,7 +46,9 @@ final class MapViewModel:ObservableObject{
             case .success(let userCoordinate):
                 self.userLocation = userCoordinate
                 if !self.fetchedFirstTime{ //画面が表示した一回目だけ
-                    self.getNearbyRestaurants(at: userCoordinate,count: 40)
+                    print("user coordinate at the first time")
+                    dump(userCoordinate)
+                    self.getNearbyRestaurants(at: userCoordinate,count: 50)
                     fetchedFirstTime = true
                 }
             case .failure(let error):
@@ -75,17 +89,15 @@ final class MapViewModel:ObservableObject{
 }
 //MARK: Filtering stuffs
 extension MapViewModel{
-    func searchRestaurantsWithSelectedFilters(budgets selectedBudgets:[Budgets],genres selectedGeneres:[Genres]){
-//        guard !selectedBudgets.isEmpty || !selectedGeneres.isEmpty else{
-//            searchedRestaurants = []
-//            return
-//        }
+    func searchRestaurantsWithSelectedFilters(keyword:String? = nil,budgets selectedBudgets:[Budgets],genres selectedGeneres:[Genres]){
         showSearchedRestaurants = true
+        showNearbyRestaurantSheet = selectedRestaurant == nil
         let range = calculateRange(for: currentSeeingRegionSpan)
         if let currentSeeingRegion = currentSeeingRegionCenterCoordinate{
             HotPepperAPIClient(
                 apiKey: APIKEY.key.rawValue
             ).searchShops(
+                keyword: keyword,
                 lat:currentSeeingRegion.latitude,
                 lon:currentSeeingRegion.longitude,
                 range:range,
@@ -129,18 +141,26 @@ extension MapViewModel{
         5: 3000m
         */
         
-        //1 :1200
-        //2: 1800
-        //3:
-        
         switch approximateMeters {
-            case 300..<1100:      return 1    // Very zoomed in (< 400m viewable)
-            case 1100..<1450:    return 2   // Zoomed in enough to see a few blocks
-            case 1450..<2100:   return 3   // Medium zoom, good for neighborhood view
-            case 2100..<3200:  return 4    // Zoomed out to see multiple neighborhoods
-            case 3200..<4200: return 5
-            default:           return 1    // Very zoomed out, city-level view
+            case 0..<1700:      return 1    // Very zoomed in (< 400m viewable)
+            case 1700..<2150:    return 2   // Zoomed in enough to see a few blocks
+            case 2150..<3000:   return 3   // Medium zoom, good for neighborhood view
+            case 3000..<4000:  return 4    // Zoomed out to see multiple neighborhoods
+            case 4000..<5200: return 5
+            default:           return 5    // Very zoomed out, city-level view
         }
+    }
+    
+    private func addSubscriberToSearchText(){
+        $searchText
+            .debounce(for: 1, scheduler: DispatchQueue.main)
+            .sink { [weak self] searchText in
+                guard let self = self else{return}
+                guard !self.searchText.isEmpty else{return}
+                guard let filterManager = self.filterManager else{return}
+                self.searchRestaurantsWithSelectedFilters(keyword: searchText, budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres)
+            }
+            .store(in: &cancellables)
     }
 }
 

@@ -9,9 +9,11 @@ import SwiftUI
 
 @main
 struct AppetiteApp: App {
+    @StateObject var filterManager = FilterManger()
     var body: some Scene {
         WindowGroup {
                 MapView()
+                .environmentObject(filterManager)
         }
     }
 }

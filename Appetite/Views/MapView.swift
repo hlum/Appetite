@@ -11,14 +11,12 @@ import MapKit
 //MARK: MapView body
 struct MapView: View {
     @State var cameraPositionChanged = false
-    @StateObject var filterManager = FilterManger()
-    @State var searchText:String = ""
-    @State var selectedRestaurant:Shop? = nil
-    @State var showNearbyRestaurantSheet:Bool = true
+    @EnvironmentObject var filterManager:FilterManger
     @State var showMapStyleMenu:Bool = false
     @AppStorage("mapStyle") var mapStyle:MapStyleCases = .hybrid
     @State var showSearchView:Bool = false
-    @StateObject var vm:MapViewModel = MapViewModel()
+    @StateObject var vm:MapViewModel = MapViewModel(filterManager: nil)//temp,onAppearでfilterManagerを渡す
+    
     var body: some View {
         ZStack{
             Map(position:$vm.cameraPosition){
@@ -35,16 +33,20 @@ struct MapView: View {
                 vm.currentSeeingRegionCenterCoordinate = context.camera.centerCoordinate//get the coordinate of the region dragged by user
             })
             .mapStyle(mapStyle == .hybrid ? .hybrid : .standard)
-            .sheet(isPresented: $showNearbyRestaurantSheet, content: {
-                NearbyRestaurantSheetView(nearbyRestaurants: vm.showSearchedRestaurants ? $vm.searchedRestaurants : $vm.nearbyRestaurants, cameraPosition: $vm.currentSeeingRegionCenterCoordinate, showSearchedRestaurants: vm.showSearchedRestaurants)
-                        .presentationCornerRadius(20)
-                        .presentationDetents([.height(150),.medium,.large])
-                        .presentationBackgroundInteraction(
-                            .enabled(upThrough: .medium)
-                        )
-                        .interactiveDismissDisabled()
-                        .background(.systemWhite)
-            })
+            .sheet(
+                isPresented: $vm.showNearbyRestaurantSheet,
+                content: {
+                    NearbyRestaurantSheetView(
+                        nearbyRestaurants: vm.showSearchedRestaurants ? $vm.searchedRestaurants : $vm.nearbyRestaurants,
+                        cameraPosition: $vm.currentSeeingRegionCenterCoordinate,
+                        selectedRestaurant:$vm.selectedRestaurant
+                    )
+                    .presentationBackgroundInteraction(.enabled)
+                    .interactiveDismissDisabled()
+                    .presentationCornerRadius(20)
+                    .presentationDetents([.height(150),.medium,.large])
+                    .background(.systemWhite)
+                })
             .overlay(alignment: .bottomTrailing, content: {
                 ToolBar
                     .padding(.bottom,150)
@@ -64,27 +66,16 @@ struct MapView: View {
             }
             .onAppear{
                 vm.getUserLocationAndNearbyRestaurants()
+                vm.setUp(filterManager)
             }
-            .onChange(of: selectedRestaurant) { _, newValue in
-                showNearbyRestaurantSheet = newValue == nil
+            .onChange(of: vm.selectedRestaurant) { _, newValue in
+                vm.showNearbyRestaurantSheet = newValue == nil
             }
             .onChange(of: filterManager.selectedGenres){ _, _ in
-                withAnimation{
-                    //フィルタが一つも選択されていない時はFalse
-                    vm.showSearchedRestaurants = !filterManager.selectedGenres.isEmpty || !filterManager.selectedBudgets.isEmpty
-                    selectedRestaurant = nil//もし選択されてるレストランが条件が変わってリストにない時バグが出るから外しましょう！！
-                    
-                    vm.searchRestaurantsWithSelectedFilters(budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres)
-                }
+                handleFilterChanges()
             }
             .onChange(of: filterManager.selectedBudgets){ _, _ in
-                withAnimation{
-                    //フィルタが一つも選択されていない時はFalse
-                    vm.showSearchedRestaurants = !filterManager.selectedGenres.isEmpty || !filterManager.selectedBudgets.isEmpty
-                    selectedRestaurant = nil//もし選択されてるレストランが条件が変わってリストにない時バグが出るから外しましょう！！
-                    
-                    vm.searchRestaurantsWithSelectedFilters(budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres)
-                }
+                handleFilterChanges()
             }
             .background(.red)
             previewsStack
@@ -97,11 +88,12 @@ extension MapView{
         VStack{
             Button{
                 withAnimation(.bouncy){
-                    vm.searchRestaurantsWithSelectedFilters(budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres)
+                    vm.searchRestaurantsWithSelectedFilters(keyword:vm.searchText,budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres)
                     cameraPositionChanged = false
                 }
             }label:{
                 Text("このエリアを検索")
+                    .font(.caption)
                     .padding()
                     .background(Color.black.opacity(0.7))
                     .cornerRadius(30)
@@ -117,7 +109,7 @@ extension MapView{
         VStack{
             Spacer()
             ForEach(vm.showSearchedRestaurants ? vm.searchedRestaurants : vm.nearbyRestaurants) { restaurant in
-                if let selectedRestaurant = selectedRestaurant{
+                if let selectedRestaurant = vm.selectedRestaurant{
                     if restaurant == selectedRestaurant{
                         RestaurantPreviewView(restaurant: selectedRestaurant)
                             .shadow(color: Color.black.opacity(0.6), radius: 20)
@@ -134,11 +126,12 @@ extension MapView{
     private var searchBarAndFilters:some View{
         ZStack{
             VStack{
-                TextField("検索。。。", text: $searchText)
+                TextField("検索。。。", text: $vm.searchText)
+                    .textInputAutocapitalization(.never)
                     .overlay(alignment: .trailing) {
-                        if !searchText.isEmpty{
+                        if !vm.searchText.isEmpty{
                             Button {
-                                searchText = ""
+                                vm.searchText = ""
                             }label:{
                                 Image(systemName:"xmark.circle")
                                     .font(.system(size: 25))
@@ -288,10 +281,10 @@ extension MapView{
                 .onTapGesture {
                     withAnimation(.bouncy) {
                         //すでに選択されているなら外す
-                        if selectedRestaurant == restaurant{
-                            selectedRestaurant = nil
+                        if vm.selectedRestaurant == restaurant{
+                            vm.selectedRestaurant = nil
                         }else{
-                            selectedRestaurant = restaurant
+                            vm.selectedRestaurant = restaurant
                         }
                     }
                 }
@@ -299,7 +292,7 @@ extension MapView{
     }
 
     private func annotationContentView(restaurant:Shop) -> some View{
-        let isSelected = restaurant == selectedRestaurant
+        let isSelected = restaurant == vm.selectedRestaurant
         return VStack(spacing:0){
             restaurant.genre.image
                 .resizable()
@@ -333,6 +326,18 @@ extension MapView{
         Alert(title: Text("位置情報の使用が制限されています"), primaryButton: .default(Text("設定を開く"), action: {
             Appetite.LocationPermissionAlert.show()
         }), secondaryButton: .cancel())
+    }
+}
+
+extension MapView{
+    private func handleFilterChanges(){
+        withAnimation{
+            //フィルタが一つも選択されていない時はFalse
+            vm.showSearchedRestaurants = !filterManager.selectedGenres.isEmpty || !filterManager.selectedBudgets.isEmpty
+            vm.selectedRestaurant = nil//もし選択されてるレストランが条件が変わってリストにない時バグが出るから外しましょう！！
+            
+            vm.searchRestaurantsWithSelectedFilters(budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres)
+        }
     }
 }
 
