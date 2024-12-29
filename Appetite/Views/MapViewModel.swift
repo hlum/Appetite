@@ -11,9 +11,10 @@ import SwiftUI
 import Combine
 
 final class MapViewModel:ObservableObject{
+    @Published var showFilterSheet:Bool = false
     var filterManager:FilterManger?
     @Published var selectedRestaurant:Shop? = nil
-    @Published var showNearbyRestaurantSheet:Bool = true
+    @Published var showNearbyRestaurantSheet:Bool = false
     @Published var searchText:String = ""
     let locationManger = LocationManager()
     @Published var nearbyRestaurants:[Shop] = []

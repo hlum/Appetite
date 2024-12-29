@@ -47,6 +47,10 @@ struct MapView: View {
                     .presentationDetents([.height(150),.medium,.large])
                     .background(.systemWhite)
                 })
+            .sheet(isPresented: $vm.showFilterSheet, content: {
+                FilterSheetView()
+                    .environmentObject(filterManager)
+            })
             .overlay(alignment: .bottomTrailing, content: {
                 ToolBar
                     .padding(.bottom,150)
@@ -126,29 +130,47 @@ extension MapView{
     private var searchBarAndFilters:some View{
         ZStack{
             VStack{
-                TextField("検索。。。", text: $vm.searchText)
-                    .textInputAutocapitalization(.never)
-                    .overlay(alignment: .trailing) {
-                        if !vm.searchText.isEmpty{
-                            Button {
-                                vm.searchText = ""
-                            }label:{
-                                Image(systemName:"xmark.circle")
-                                    .font(.system(size: 25))
-                                    .foregroundStyle(Color.systemBlack)
-                            }
-                        }
-                    }
-                    .padding()
-                    .background(Color.systemWhite)
-                    .cornerRadius(20)
-                    .shadow(radius: 10)
-                
+                HStack{
+                    showFilterButton
+                    searchBar
+                }
                 genresFilter
                 budgetFilters
                 
             }
-            .padding(.horizontal)
+            .padding()
+        }
+    }
+    
+    private var searchBar:some View{
+        TextField("検索。。。", text: $vm.searchText)
+            .textInputAutocapitalization(.never)
+            .overlay(alignment: .trailing) {
+                if !vm.searchText.isEmpty{
+                    Button {
+                        vm.searchText = ""
+                    }label:{
+                        Image(systemName:"xmark.circle")
+                            .font(.system(size: 25))
+                            .foregroundStyle(Color.systemBlack)
+                    }
+                }
+            }
+            .padding()
+            .background(Color.systemWhite)
+            .cornerRadius(20)
+            .shadow(radius: 10)
+    }
+    
+    private var showFilterButton:some View{
+        Button{
+            vm.showFilterSheet = true
+        }label: {
+            Image(systemName: "slider.horizontal.3")
+                .font(.title3)
+                .padding()
+                .background(.systemWhite)
+                .cornerRadius(15)
         }
     }
     
@@ -343,9 +365,12 @@ extension MapView{
 
 #Preview {
     MapView()
+        .environmentObject(FilterManger())
+
 }
 #Preview {
     MapView()
+        .environmentObject(FilterManger())
         .colorScheme(.dark)
 }
 
