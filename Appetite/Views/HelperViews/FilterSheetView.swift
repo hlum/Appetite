@@ -15,9 +15,8 @@ struct FilterSheetView: View {
             VStack(alignment: .leading) {
                 ScrollView {
                     FilterSection(title: "予算", items: Array(Budgets.allCases))
-                        .environmentObject(filterManager)
                     FilterSection(title: "ジャンル", items: Array(Genres.allCases))
-                        .environmentObject(filterManager)
+                    FilterSection(title: "特集", items: Array(SpecialCategory.allCases))
                 }
                
 

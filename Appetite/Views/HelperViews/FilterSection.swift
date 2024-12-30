@@ -56,6 +56,8 @@ extension FilterSection{
             return filterManager.selectedBudgets.contains(item as! Budgets)
         case .genre:
             return filterManager.selectedGenres.contains(item as! Genres)
+        case .specialCategory:
+            return filterManager.selectedSpecialCategory.contains(item as! SpecialCategory)
         }
     }
     
@@ -78,6 +80,16 @@ extension FilterSection{
                 } else {
                     if let index = filterManager.selectedGenres.firstIndex(of: genreItem) {
                         filterManager.selectedGenres.remove(at: index)
+                    }
+                }
+            }
+        case .specialCategory:
+            if let specialCategoryItem = item as? SpecialCategory {
+                if !isSelected(item) {
+                    filterManager.selectedSpecialCategory.append(specialCategoryItem)
+                } else {
+                    if let index = filterManager.selectedSpecialCategory.firstIndex(of: specialCategoryItem) {
+                        filterManager.selectedSpecialCategory.remove(at: index)
                     }
                 }
             }

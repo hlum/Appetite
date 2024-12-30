@@ -15,4 +15,5 @@ protocol FilterItemProtocol:CaseIterable,Hashable{
 enum FilterType{
     case budget
     case genre
+    case specialCategory
 }
