@@ -44,6 +44,7 @@ class HotPepperAPIClient: ObservableObject {
         range: Int? = nil,
         genres: [Genres] = [],
         budgets: [Budgets] = [],
+        specialCategories:[SpecialCategory] = [],
         maxResults: Int = 100,
         completion: @escaping (Result<HotPepperResponse, Error>) -> Void
     ) {
@@ -55,6 +56,7 @@ class HotPepperAPIClient: ObservableObject {
             range: range,
             genres: genres,
             budgets: budgets,
+            specialCategories: specialCategories,
             start: 1,
             count: 1
         ) { result in
@@ -81,6 +83,7 @@ class HotPepperAPIClient: ObservableObject {
                     range: range,
                     genres: genres,
                     budgets: budgets,
+                    specialCategories: specialCategories,
                     completion: completion
                 )
             case .failure(let error):
@@ -97,6 +100,7 @@ class HotPepperAPIClient: ObservableObject {
         range: Int?,
         genres: [Genres],
         budgets: [Budgets],
+        specialCategories:[SpecialCategory],
         completion: @escaping (Result<HotPepperResponse, Error>) -> Void
     ) {
         let numberOfPages = Int(ceil(Double(totalResults) / Double(maxResultsPerPage)))
@@ -116,6 +120,7 @@ class HotPepperAPIClient: ObservableObject {
                 range: range,
                 genres: genres,
                 budgets: budgets,
+                specialCategories: specialCategories,
                 start: start,
                 count: countForThisPage
             ) { result in
@@ -151,8 +156,9 @@ class HotPepperAPIClient: ObservableObject {
         lat: Double? = nil,
         lon: Double? = nil,
         range: Int? = nil,
-        genres: [Genres] = [],
-        budgets: [Budgets] = [],
+        genres: [Genres],
+        budgets: [Budgets],
+        specialCategories:[SpecialCategory],
         start: Int,
         count: Int,
         completion: @escaping (Result<HotPepperResponse, Error>) -> Void
@@ -197,6 +203,12 @@ class HotPepperAPIClient: ObservableObject {
             }
         }
         
+        if !specialCategories.isEmpty{
+            for specialCategory in specialCategories {
+                queryItems.append(URLQueryItem(name: "special", value: specialCategory.code))
+            }
+        }
+        
         urlComponents.queryItems = queryItems
         
         guard let url = urlComponents.url else {
@@ -212,6 +224,7 @@ class HotPepperAPIClient: ObservableObject {
             }
             
             guard let data = data else {
+                print("No data found")
                 completion(.failure(CustomErrors.NoDataFound))
                 return
             }
@@ -221,6 +234,7 @@ class HotPepperAPIClient: ObservableObject {
                 let response = try decoder.decode(HotPepperResponse.self, from: data)
                 completion(.success(response))
             } catch {
+                print("decode error")
                 completion(.failure(error))
             }
         }

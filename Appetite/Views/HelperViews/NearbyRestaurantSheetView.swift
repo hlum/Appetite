@@ -87,7 +87,7 @@ struct NearbyRestaurantSheetView: View {
                     Text("レストラン一覧")
                 }
             }
-            .navigationTitle("\(restaurantsShowing.count)")
+//            .navigationTitle("\(restaurantsShowing.count)")
         }
     }
 }

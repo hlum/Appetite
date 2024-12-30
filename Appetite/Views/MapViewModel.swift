@@ -11,6 +11,7 @@ import SwiftUI
 import Combine
 
 final class MapViewModel:ObservableObject{
+    var searchSeeingArea : Bool = false
     @Published var showFilterSheet:Bool = false
     var filterManager:FilterManger?
     @Published var selectedRestaurant:Shop? = nil
@@ -96,9 +97,9 @@ final class MapViewModel:ObservableObject{
 }
 //MARK: Filtering stuffs
 extension MapViewModel{
-    func searchRestaurantsWithSelectedFilters(keyword:String? = nil,budgets selectedBudgets:[Budgets],genres selectedGeneres:[Genres]){
-        showSearchedRestaurants = !(filterManager?.selectedGenres.isEmpty ?? true && filterManager?.selectedBudgets.isEmpty ?? true && searchText.isEmpty)
-
+    func searchRestaurantsWithSelectedFilters(keyword:String? = nil,budgets selectedBudgets:[Budgets],genres selectedGeneres:[Genres],selectedSpecialCategories:[SpecialCategory]){
+        showSearchedRestaurants = !(filterManager?.selectedGenres.isEmpty ?? true && filterManager?.selectedBudgets.isEmpty ?? true && filterManager?.selectedSpecialCategory.isEmpty ?? true && searchText.isEmpty && !searchSeeingArea)
+        print("showsearchRestaurants:\(showSearchedRestaurants)")
         //Queryがkeyword=&genre=.....のようにならないように
         let checkedKeyword: String? = (keyword?.isEmpty == false) ? keyword : nil
 
@@ -113,7 +114,8 @@ extension MapViewModel{
                 lon:currentSeeingRegion.longitude,
                 range:range,
                 genres:selectedGeneres,
-                budgets: selectedBudgets
+                budgets: selectedBudgets,
+                specialCategories: selectedSpecialCategories
                 
             ) {[weak self] result in
                 guard let self = self else{
@@ -179,11 +181,11 @@ extension MapViewModel{
                 guard !searchText.isEmpty else{
                     //NearbyRestaurantsを取得してからそれ以降　searchTextが空になった時でも検索する
                     if self.fetchedFirstTime{
-                        self.searchRestaurantsWithSelectedFilters(budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres)
+                        self.searchRestaurantsWithSelectedFilters(budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres, selectedSpecialCategories: filterManager.selectedSpecialCategory)
                     }
                     return
                 }
-                    self.searchRestaurantsWithSelectedFilters(keyword: searchText, budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres)
+                self.searchRestaurantsWithSelectedFilters(keyword: searchText, budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres,selectedSpecialCategories: filterManager.selectedSpecialCategory)
             }
             .store(in: &cancellables)
     }

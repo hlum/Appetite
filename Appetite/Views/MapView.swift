@@ -50,6 +50,7 @@ struct MapView: View {
             .sheet(isPresented: $vm.showFilterSheet, content: {
                 FilterSheetView()
                     .environmentObject(filterManager)
+                    .presentationDetents([.medium,.large])
             })
             .overlay(alignment: .bottomTrailing, content: {
                 ToolBar
@@ -73,7 +74,14 @@ struct MapView: View {
                 vm.setUp(filterManager)
             }
             .onChange(of: vm.selectedRestaurant) { _, newValue in
-                vm.showNearbyRestaurantSheet = newValue == nil
+                vm.showNearbyRestaurantSheet = newValue == nil && !vm.showFilterSheet
+                if let lon = newValue?.lon,
+                   let lat = newValue?.lat{
+                    vm.moveCamera(to: CLLocationCoordinate2D(latitude: lat, longitude:lon))
+                }
+            }
+            .onChange(of:vm.showFilterSheet) { _, newValue in
+                vm.showNearbyRestaurantSheet = !newValue && vm.selectedRestaurant == nil
             }
             .onChange(of: filterManager.filterChangedFlag) { _, _ in
                 handleFilterChanges()
@@ -88,7 +96,16 @@ extension MapView{
         VStack{
             Button{
                 withAnimation(.bouncy){
-                    vm.searchRestaurantsWithSelectedFilters(keyword:vm.searchText,budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres)
+/*
+ showSearchedRestaurants はフィルターとsearchTextがなくなる時falseになって
+ nearbyRestaurantだけが表示されるから
+ "このエリアを検索"　ボタンを押された時には
+ フィルターやsearchTextがなくても見ている範囲内のレストランを出すため
+ */
+                    vm.searchSeeingArea = true
+                    
+                    
+                    vm.searchRestaurantsWithSelectedFilters(keyword:vm.searchText,budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres, selectedSpecialCategories: filterManager.selectedSpecialCategory)
                     cameraPositionChanged = false
                 }
             }label:{
@@ -117,7 +134,7 @@ extension MapView{
                             .frame(maxWidth: .infinity)
                             .transition(.asymmetric(
                                 insertion: .move(edge: .trailing),
-                                removal: .move(edge: .bottom)))
+                                removal: .move(edge: .leading)))
                     }
                 }
             }
@@ -127,7 +144,7 @@ extension MapView{
         ZStack{
             VStack{
                 HStack{
-                    showFilterButton
+                    showFilterSheetButton
                     searchBar
                 }
                 genresFilter
@@ -158,9 +175,8 @@ extension MapView{
             .shadow(radius: 10)
     }
     
-    private var showFilterButton:some View{
+    private var showFilterSheetButton:some View{
         Button{
-            vm.showNearbyRestaurantSheet = false
             vm.showFilterSheet = true
         }label: {
             Image(systemName: "slider.horizontal.3")
@@ -352,13 +368,15 @@ extension MapView{
     private func handleFilterChanges(){
         withAnimation{
             //フィルタが一つも選択されていない時はFalse
-            vm.showSearchedRestaurants = !(filterManager.selectedGenres.isEmpty && filterManager.selectedBudgets.isEmpty && vm.searchText.isEmpty)
+            vm.showSearchedRestaurants = !(
+                filterManager.selectedGenres.isEmpty && filterManager.selectedBudgets.isEmpty && filterManager.selectedSpecialCategory.isEmpty && vm.searchText.isEmpty
+            )
 
             print("showSearchRestaurants: \(vm.showSearchedRestaurants)")
             //もし選択されてるレストランが条件が変わってリストにない時バグが出るから外す！！
             vm.selectedRestaurant =  nil
             
-            vm.searchRestaurantsWithSelectedFilters(keyword: vm.searchText,budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres)
+            vm.searchRestaurantsWithSelectedFilters(keyword: vm.searchText,budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres, selectedSpecialCategories: filterManager.selectedSpecialCategory)
         }
     }
 }
