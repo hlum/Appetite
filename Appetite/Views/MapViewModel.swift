@@ -176,7 +176,13 @@ extension MapViewModel{
             .sink { [weak self] searchText in
                 guard let self = self else{return}
                 guard let filterManager = self.filterManager else{return}
-                guard !searchText.isEmpty else{return}
+                guard !searchText.isEmpty else{
+                    //NearbyRestaurantsを取得してからそれ以降　searchTextが空になった時でも検索する
+                    if self.fetchedFirstTime{
+                        self.searchRestaurantsWithSelectedFilters(budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres)
+                    }
+                    return
+                }
                     self.searchRestaurantsWithSelectedFilters(keyword: searchText, budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres)
             }
             .store(in: &cancellables)

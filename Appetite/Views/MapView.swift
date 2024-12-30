@@ -75,10 +75,7 @@ struct MapView: View {
             .onChange(of: vm.selectedRestaurant) { _, newValue in
                 vm.showNearbyRestaurantSheet = newValue == nil
             }
-            .onChange(of: filterManager.selectedGenres){ _, _ in
-                handleFilterChanges()
-            }
-            .onChange(of: filterManager.selectedBudgets){ _, _ in
+            .onChange(of: filterManager.filterChangedFlag) { _, _ in
                 handleFilterChanges()
             }
             previewsStack
