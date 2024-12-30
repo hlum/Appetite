@@ -14,8 +14,8 @@ struct MapView: View {
     @EnvironmentObject var filterManager:FilterManger
     @State var showMapStyleMenu:Bool = false
     @AppStorage("mapStyle") var mapStyle:MapStyleCases = .hybrid
-    @State var showSearchView:Bool = false
-    @StateObject var vm:MapViewModel = MapViewModel(filterManager: nil)//temp,onAppearでfilterManagerを渡す
+    //temp,onAppearでfilterManagerを渡す
+    @StateObject var vm:MapViewModel = MapViewModel(filterManager:nil)
     
     var body: some View {
         ZStack{
@@ -81,7 +81,6 @@ struct MapView: View {
             .onChange(of: filterManager.selectedBudgets){ _, _ in
                 handleFilterChanges()
             }
-            .background(.red)
             previewsStack
         }
     }
@@ -164,6 +163,7 @@ extension MapView{
     
     private var showFilterButton:some View{
         Button{
+            vm.showNearbyRestaurantSheet = false
             vm.showFilterSheet = true
         }label: {
             Image(systemName: "slider.horizontal.3")
@@ -355,8 +355,11 @@ extension MapView{
     private func handleFilterChanges(){
         withAnimation{
             //フィルタが一つも選択されていない時はFalse
-            vm.showSearchedRestaurants = !filterManager.selectedGenres.isEmpty || !filterManager.selectedBudgets.isEmpty
-            vm.selectedRestaurant = nil//もし選択されてるレストランが条件が変わってリストにない時バグが出るから外しましょう！！
+            vm.showSearchedRestaurants = !(filterManager.selectedGenres.isEmpty && filterManager.selectedBudgets.isEmpty && vm.searchText.isEmpty)
+
+            print("showSearchRestaurants: \(vm.showSearchedRestaurants)")
+            //もし選択されてるレストランが条件が変わってリストにない時バグが出るから外す！！
+            vm.selectedRestaurant =  nil
             
             vm.searchRestaurantsWithSelectedFilters(keyword: vm.searchText,budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres)
         }

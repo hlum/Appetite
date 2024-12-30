@@ -66,6 +66,9 @@ class HotPepperAPIClient: ObservableObject {
             case .success(let initialResponse):
                 var totalResults = initialResponse.results.resultsAvailable ?? 0
                 
+                if totalResults == 0{
+                    completion(.failure(CustomErrors.NoDataFound))
+                }
                 // If maxResults is less than available results, use that instead
                 totalResults = min(totalResults, maxResults)
                 
@@ -200,7 +203,7 @@ class HotPepperAPIClient: ObservableObject {
             completion(.failure(CustomErrors.InvalidURL))
             return
         }
-        print(url)
+        print("DEBUG url:  \(url)")
         
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             if let error = error {

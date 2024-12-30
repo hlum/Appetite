@@ -8,13 +8,31 @@
 import SwiftUI
 
 struct FilterSheetView: View {
-    @EnvironmentObject var filterManager:FilterManger
+    @EnvironmentObject var filterManager: FilterManger
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        NavigationStack{
+            VStack(alignment: .leading) {
+                ScrollView {
+                    FilterSection(title: "予算", items: Array(Budgets.allCases))
+                        .environmentObject(filterManager)
+                    FilterSection(title: "ジャンル", items: Array(Genres.allCases))
+                        .environmentObject(filterManager)
+                }
+               
+
+                Spacer()
+            }
+            .navigationTitle("検索条件")
+            .padding()
+            .foregroundStyle(.systemBlack)
+            .background(.systemWhite)
+        }
     }
 }
 
 #Preview {
     FilterSheetView()
         .environmentObject(FilterManger())
+        .colorScheme(.light)
 }

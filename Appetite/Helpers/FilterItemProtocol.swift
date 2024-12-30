@@ -9,4 +9,10 @@ import Foundation
 
 protocol FilterItemProtocol:CaseIterable,Hashable{
     var rawValue:String{get}
+    static var filterType:FilterType{get}
+}
+
+enum FilterType{
+    case budget
+    case genre
 }

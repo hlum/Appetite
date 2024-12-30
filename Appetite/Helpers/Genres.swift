@@ -6,6 +6,8 @@
 //
 
 enum Genres: String, FilterItemProtocol {
+    static var filterType: FilterType = .genre
+    
     case G001 = "居酒屋"
     case G002 = "ダイニングバー・バル"
     case G003 = "創作料理"

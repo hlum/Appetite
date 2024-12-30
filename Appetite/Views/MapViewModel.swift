@@ -14,7 +14,7 @@ final class MapViewModel:ObservableObject{
     @Published var showFilterSheet:Bool = false
     var filterManager:FilterManger?
     @Published var selectedRestaurant:Shop? = nil
-    @Published var showNearbyRestaurantSheet:Bool = false
+    @Published var showNearbyRestaurantSheet:Bool = true
     @Published var searchText:String = ""
     let locationManger = LocationManager()
     @Published var nearbyRestaurants:[Shop] = []
@@ -28,12 +28,15 @@ final class MapViewModel:ObservableObject{
 
     @Published var searchedRestaurants:[Shop] = []
     
-    var showSearchedRestaurants: Bool = false
+    @Published var showSearchedRestaurants: Bool = false
     
     init(filterManager:FilterManger?){
         self.filterManager = filterManager
-        addSubscriberToSearchText()
         getUserLocationAndNearbyRestaurants()
+        //NearbyRestaurantsを待つ
+        DispatchQueue.main.asyncAfter(deadline: .now()+3){
+            self.addSubscriberToSearchText()  //検索バーを検知する
+        }
     }
     
     func setUp(_ filterManager:FilterManger){//passed the environment object from the view
@@ -49,7 +52,7 @@ final class MapViewModel:ObservableObject{
                 if !self.fetchedFirstTime{ //画面が表示した一回目だけ
                     print("user coordinate at the first time")
                     dump(userCoordinate)
-                    self.getNearbyRestaurants(at: userCoordinate,count: 50)
+                    self.getNearbyRestaurants(at: userCoordinate)
                     fetchedFirstTime = true
                 }
             case .failure(let error):
@@ -58,15 +61,18 @@ final class MapViewModel:ObservableObject{
         }
     }
     
-    func getNearbyRestaurants(at userCoordinate:CLLocationCoordinate2D,count:Int = 10){
+    func getNearbyRestaurants(at userCoordinate:CLLocationCoordinate2D,count:Int = 100){
         let apiCaller = HotPepperAPIClient(apiKey:APIKEY.key.rawValue)
-        apiCaller.searchAllShops(lat: userCoordinate.latitude, lon: userCoordinate.longitude,range: 3,maxResults: 100) { [weak self] result in
+        apiCaller.searchAllShops(lat: userCoordinate.latitude, lon: userCoordinate.longitude,range: 3,maxResults: count) { [weak self] result in
                 switch result{
                 case .success(let response):
                     DispatchQueue.main.async {
                         self?.nearbyRestaurants = response.results.shops
                     }
                 case .failure(let error):
+                    DispatchQueue.main.async{
+                        self?.nearbyRestaurants = []
+                    }
                     print(error.localizedDescription)
                 }
             }
@@ -91,14 +97,18 @@ final class MapViewModel:ObservableObject{
 //MARK: Filtering stuffs
 extension MapViewModel{
     func searchRestaurantsWithSelectedFilters(keyword:String? = nil,budgets selectedBudgets:[Budgets],genres selectedGeneres:[Genres]){
-        showSearchedRestaurants = true
-        showNearbyRestaurantSheet = selectedRestaurant == nil
+        showSearchedRestaurants = !(filterManager?.selectedGenres.isEmpty ?? true && filterManager?.selectedBudgets.isEmpty ?? true && searchText.isEmpty)
+
+        //Queryがkeyword=&genre=.....のようにならないように
+        let checkedKeyword: String? = (keyword?.isEmpty == false) ? keyword : nil
+
+            //        showNearbyRestaurantSheet = selectedRestaurant == nil
         let range = calculateRange(for: currentSeeingRegionSpan)
         if let currentSeeingRegion = currentSeeingRegionCenterCoordinate{
             HotPepperAPIClient(
                 apiKey: APIKEY.key.rawValue
             ).searchAllShops(
-                keyword: keyword,
+                keyword: checkedKeyword,
                 lat:currentSeeingRegion.latitude,
                 lon:currentSeeingRegion.longitude,
                 range:range,
@@ -106,17 +116,24 @@ extension MapViewModel{
                 budgets: selectedBudgets
                 
             ) {[weak self] result in
-                
+                guard let self = self else{
+                    print("lose object")
+                    return
+                }
                 switch result{
                 case .success(let response):
                     DispatchQueue.main.async{
                         print("Success")
                         withAnimation{
-                            self?.searchedRestaurants = response.results.shops
+                            self.searchedRestaurants = response.results.shops
+                            print("COUNT searchedRestaurants:\(self.searchedRestaurants.count)")
+                            print("COUNT nearbyRestaurants:\(self.nearbyRestaurants.count)")
                         }
-//                        dump(self?.searchedRestaurants)
                     }
                 case .failure(let error):
+                    DispatchQueue.main.async{
+                        self.searchedRestaurants = []
+                    }
                     print(error.localizedDescription)
                 }
                 
@@ -127,6 +144,7 @@ extension MapViewModel{
     }
     
     private func calculateRange(for span:MKCoordinateSpan)->Int{
+        //どちらか大きい方で決める
         let maxDelta = max(span.longitudeDelta, span.latitudeDelta)
         
         //delta -> meter
@@ -142,23 +160,24 @@ extension MapViewModel{
         */
         
         switch approximateMeters {
-            case 0..<1700:      return 1    // Very zoomed in (< 400m viewable)
-            case 1700..<2150:    return 2   // Zoomed in enough to see a few blocks
-            case 2150..<3000:   return 3   // Medium zoom, good for neighborhood view
-            case 3000..<4000:  return 4    // Zoomed out to see multiple neighborhoods
-            case 4000..<5200: return 5
-            default:           return 5    // Very zoomed out, city-level view
+        case 0..<1700:      return 1
+        case 1700..<2150:    return 2
+        case 2150..<3000:   return 3
+        case 3000..<4000:  return 4
+        case 4000..<5200: return 5
+        default:           return 5
         }
     }
     
     private func addSubscriberToSearchText(){
+        
         $searchText
             .debounce(for: 1, scheduler: DispatchQueue.main)
             .sink { [weak self] searchText in
                 guard let self = self else{return}
-                guard !self.searchText.isEmpty else{return}
                 guard let filterManager = self.filterManager else{return}
-                self.searchRestaurantsWithSelectedFilters(keyword: searchText, budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres)
+                guard !searchText.isEmpty else{return}
+                    self.searchRestaurantsWithSelectedFilters(keyword: searchText, budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres)
             }
             .store(in: &cancellables)
     }

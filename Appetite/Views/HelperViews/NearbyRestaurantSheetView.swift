@@ -72,18 +72,22 @@ struct NearbyRestaurantSheetView: View {
             List {
                 Section{
                     LazyVStack{
-                        ForEach(restaurantsShowing) { shop in
-                            listItemView(for: shop)
-                                .onTapGesture {
-                                    selectedRestaurant = shop
-                                }
+                        if !restaurantsShowing.isEmpty{
+                            ForEach(restaurantsShowing) { shop in
+                                listItemView(for: shop)
+                                    .onTapGesture {
+                                        selectedRestaurant = shop
+                                    }
+                            }
+                        }else{
+                            ContentUnavailableView("検索結果に一致するものはありません。", systemImage: "magnifyingglass")
                         }
                     }
                 }header: {
                     Text("レストラン一覧")
                 }
             }
-            //            .navigationTitle(showSearchedRestaurants ? "検索結果 \(restaurantsShowing.count)個" : "近所のレストラン一覧")
+            .navigationTitle("\(restaurantsShowing.count)")
         }
     }
 }

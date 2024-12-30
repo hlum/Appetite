@@ -8,6 +8,8 @@
 import Foundation
 
 enum Budgets: String,FilterItemProtocol {
+    static var filterType: FilterType = .budget
+    
     case B009 = "～500円"
     case B010 = "501～1000円"
     case B011 = "1001～1500円"
