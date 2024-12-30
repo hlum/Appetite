@@ -104,8 +104,16 @@ extension MapView{
  */
                     vm.searchSeeingArea = true
                     
+                    vm.selectedRestaurant = nil
                     
-                    vm.searchRestaurantsWithSelectedFilters(keyword:vm.searchText,budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres, selectedSpecialCategories: filterManager.selectedSpecialCategory)
+                    vm
+                        .searchRestaurantsWithSelectedFilters(
+                            keyword:vm.searchText,
+                            budgets: filterManager.selectedBudgets,
+                            genres: filterManager.selectedGenres,
+                            selectedSpecialCategories: filterManager.selectedSpecialCategory,
+                            selectedSpecialCategory2: filterManager.selectedSpecialCategory2
+                        )
                     cameraPositionChanged = false
                 }
             }label:{
@@ -351,7 +359,6 @@ extension MapView{
                 .offset(y:isSelected ? -5 : -3)
                 .animation(.bouncy, value: isSelected)
         }
-        .shadow(color: isSelected ? .red.opacity(0.5) : .clear, radius: 10, x: 0, y: 0)
     }
 }
 
@@ -369,14 +376,18 @@ extension MapView{
         withAnimation{
             //フィルタが一つも選択されていない時はFalse
             vm.showSearchedRestaurants = !(
-                filterManager.selectedGenres.isEmpty && filterManager.selectedBudgets.isEmpty && filterManager.selectedSpecialCategory.isEmpty && vm.searchText.isEmpty
+                filterManager.selectedGenres.isEmpty &&
+                filterManager.selectedBudgets.isEmpty &&
+                filterManager.selectedSpecialCategory.isEmpty &&
+                filterManager.selectedSpecialCategory2.isEmpty &&
+                vm.searchText.isEmpty
             )
 
             print("showSearchRestaurants: \(vm.showSearchedRestaurants)")
             //もし選択されてるレストランが条件が変わってリストにない時バグが出るから外す！！
             vm.selectedRestaurant =  nil
             
-            vm.searchRestaurantsWithSelectedFilters(keyword: vm.searchText,budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres, selectedSpecialCategories: filterManager.selectedSpecialCategory)
+            vm.searchRestaurantsWithSelectedFilters(keyword: vm.searchText,budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres, selectedSpecialCategories: filterManager.selectedSpecialCategory,selectedSpecialCategory2:filterManager.selectedSpecialCategory2)
         }
     }
 }

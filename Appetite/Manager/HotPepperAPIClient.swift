@@ -45,6 +45,7 @@ class HotPepperAPIClient: ObservableObject {
         genres: [Genres] = [],
         budgets: [Budgets] = [],
         specialCategories:[SpecialCategory] = [],
+        specialCategories2:[SpecialCategory2] = [],
         maxResults: Int = 100,
         completion: @escaping (Result<HotPepperResponse, Error>) -> Void
     ) {
@@ -57,13 +58,14 @@ class HotPepperAPIClient: ObservableObject {
             genres: genres,
             budgets: budgets,
             specialCategories: specialCategories,
+            specialCategories2:specialCategories2,
             start: 1,
             count: 1
-        ) { result in
-//            guard let self = self else{
-//                print("lose the object")
-//                return
-//            }
+        ) {[weak self] result in
+            guard let self = self else{
+                print("lose the object")
+                return
+            }
             switch result {
             case .success(let initialResponse):
                 var totalResults = initialResponse.results.resultsAvailable ?? 0
@@ -84,6 +86,7 @@ class HotPepperAPIClient: ObservableObject {
                     genres: genres,
                     budgets: budgets,
                     specialCategories: specialCategories,
+                    specialCategories2: specialCategories2,
                     completion: completion
                 )
             case .failure(let error):
@@ -101,6 +104,7 @@ class HotPepperAPIClient: ObservableObject {
         genres: [Genres],
         budgets: [Budgets],
         specialCategories:[SpecialCategory],
+        specialCategories2:[SpecialCategory2],
         completion: @escaping (Result<HotPepperResponse, Error>) -> Void
     ) {
         let numberOfPages = Int(ceil(Double(totalResults) / Double(maxResultsPerPage)))
@@ -120,10 +124,10 @@ class HotPepperAPIClient: ObservableObject {
                 range: range,
                 genres: genres,
                 budgets: budgets,
-                specialCategories: specialCategories,
+                specialCategories: specialCategories, specialCategories2: specialCategories2,
                 start: start,
                 count: countForThisPage
-            ) { result in
+            ) {result in
                 switch result {
                 case .success(let response):
                     allShops.append(contentsOf: response.results.shops)
@@ -159,6 +163,7 @@ class HotPepperAPIClient: ObservableObject {
         genres: [Genres],
         budgets: [Budgets],
         specialCategories:[SpecialCategory],
+        specialCategories2:[SpecialCategory2],
         start: Int,
         count: Int,
         completion: @escaping (Result<HotPepperResponse, Error>) -> Void
@@ -206,6 +211,12 @@ class HotPepperAPIClient: ObservableObject {
         if !specialCategories.isEmpty{
             for specialCategory in specialCategories {
                 queryItems.append(URLQueryItem(name: "special", value: specialCategory.code))
+            }
+        }
+        
+        if !specialCategories2.isEmpty{
+            for specialCategory2 in specialCategories2 {
+                queryItems.append(URLQueryItem(name: "special_category", value: specialCategory2.code))
             }
         }
         

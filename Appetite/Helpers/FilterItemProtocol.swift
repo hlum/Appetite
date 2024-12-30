@@ -16,4 +16,5 @@ enum FilterType{
     case budget
     case genre
     case specialCategory
+    case specialCategory2
 }

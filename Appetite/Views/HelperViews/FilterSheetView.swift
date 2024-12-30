@@ -17,6 +17,7 @@ struct FilterSheetView: View {
                     FilterSection(title: "予算", items: Array(Budgets.allCases))
                     FilterSection(title: "ジャンル", items: Array(Genres.allCases))
                     FilterSection(title: "特集", items: Array(SpecialCategory.allCases))
+                    FilterSection(title: "２。特集", items: Array(SpecialCategory2.allCases))
                 }
                
 

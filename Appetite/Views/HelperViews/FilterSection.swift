@@ -58,41 +58,30 @@ extension FilterSection{
             return filterManager.selectedGenres.contains(item as! Genres)
         case .specialCategory:
             return filterManager.selectedSpecialCategory.contains(item as! SpecialCategory)
+        case .specialCategory2:
+            return filterManager.selectedSpecialCategory2.contains(item as! SpecialCategory2)
         }
     }
     
-    private func handleFilterButtonPressed(for item:T){
-        switch T.filterType {
+    private func handleFilterButtonPressed<Y: FilterItemProtocol>(for item: Y) {
+        switch Y.filterType {
         case .budget:
-            if let budgetItem = item as? Budgets {
-                if !isSelected(item) {
-                    filterManager.selectedBudgets.append(budgetItem)
-                } else {
-                    if let index = filterManager.selectedBudgets.firstIndex(of: budgetItem) {
-                        filterManager.selectedBudgets.remove(at: index)
-                    }
-                }
-            }
+            toggleSelection(for: item as? Budgets, in: &filterManager.selectedBudgets)
         case .genre:
-            if let genreItem = item as? Genres {
-                if !isSelected(item) {
-                    filterManager.selectedGenres.append(genreItem)
-                } else {
-                    if let index = filterManager.selectedGenres.firstIndex(of: genreItem) {
-                        filterManager.selectedGenres.remove(at: index)
-                    }
-                }
-            }
+            toggleSelection(for: item as? Genres, in: &filterManager.selectedGenres)
         case .specialCategory:
-            if let specialCategoryItem = item as? SpecialCategory {
-                if !isSelected(item) {
-                    filterManager.selectedSpecialCategory.append(specialCategoryItem)
-                } else {
-                    if let index = filterManager.selectedSpecialCategory.firstIndex(of: specialCategoryItem) {
-                        filterManager.selectedSpecialCategory.remove(at: index)
-                    }
-                }
-            }
+            toggleSelection(for: item as? SpecialCategory, in: &filterManager.selectedSpecialCategory)
+        case .specialCategory2:
+            toggleSelection(for: item as? SpecialCategory2, in: &filterManager.selectedSpecialCategory2)
+        }
+    }
+
+    private func toggleSelection<Y: Equatable>(for item: Y?, in list: inout [Y]) {
+        guard let item = item else { return }
+        if let index = list.firstIndex(of: item) {
+            list.remove(at: index)
+        } else {
+            list.append(item)
         }
     }
 }

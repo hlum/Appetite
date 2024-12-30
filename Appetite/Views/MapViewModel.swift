@@ -11,13 +11,14 @@ import SwiftUI
 import Combine
 
 final class MapViewModel:ObservableObject{
+    private let apiClient:HotPepperAPIClient
     var searchSeeingArea : Bool = false
     @Published var showFilterSheet:Bool = false
-    var filterManager:FilterManger?
+    weak var filterManager:FilterManger?
     @Published var selectedRestaurant:Shop? = nil
     @Published var showNearbyRestaurantSheet:Bool = true
     @Published var searchText:String = ""
-    let locationManger = LocationManager()
+    let locationManager = LocationManager()
     @Published var nearbyRestaurants:[Shop] = []
     @Published var showLocationPermissionAlert:Bool = false
     @Published var cameraPosition:MapCameraPosition = .automatic
@@ -32,6 +33,7 @@ final class MapViewModel:ObservableObject{
     @Published var showSearchedRestaurants: Bool = false
     
     init(filterManager:FilterManger?){
+        self.apiClient = HotPepperAPIClient(apiKey: APIKEY.key.rawValue)
         self.filterManager = filterManager
         getUserLocationAndNearbyRestaurants()
         //NearbyRestaurantsを待つ
@@ -40,12 +42,17 @@ final class MapViewModel:ObservableObject{
         }
     }
     
+    deinit{
+        locationManager.onLocationUpdate = nil
+        cancellables.removeAll()
+    }
+    
     func setUp(_ filterManager:FilterManger){//passed the environment object from the view
         self.filterManager = filterManager
     }
         
     func getUserLocationAndNearbyRestaurants(){
-        locationManger.onLocationUpdate = {[weak self] result in
+        locationManager.onLocationUpdate = {[weak self] result in
             guard let self = self else{return}
             switch result{
             case .success(let userCoordinate):
@@ -62,9 +69,8 @@ final class MapViewModel:ObservableObject{
         }
     }
     
-    func getNearbyRestaurants(at userCoordinate:CLLocationCoordinate2D,count:Int = 100){
-        let apiCaller = HotPepperAPIClient(apiKey:APIKEY.key.rawValue)
-        apiCaller.searchAllShops(lat: userCoordinate.latitude, lon: userCoordinate.longitude,range: 3,maxResults: count) { [weak self] result in
+    private func getNearbyRestaurants(at userCoordinate:CLLocationCoordinate2D,count:Int = 100){
+        self.apiClient.searchAllShops(lat: userCoordinate.latitude, lon: userCoordinate.longitude,range: 3,maxResults: count) { [weak self] result in
                 switch result{
                 case .success(let response):
                     DispatchQueue.main.async {
@@ -97,8 +103,19 @@ final class MapViewModel:ObservableObject{
 }
 //MARK: Filtering stuffs
 extension MapViewModel{
-    func searchRestaurantsWithSelectedFilters(keyword:String? = nil,budgets selectedBudgets:[Budgets],genres selectedGeneres:[Genres],selectedSpecialCategories:[SpecialCategory]){
-        showSearchedRestaurants = !(filterManager?.selectedGenres.isEmpty ?? true && filterManager?.selectedBudgets.isEmpty ?? true && filterManager?.selectedSpecialCategory.isEmpty ?? true && searchText.isEmpty && !searchSeeingArea)
+    
+    func searchRestaurantsWithSelectedFilters(
+        keyword:String? = nil,
+        budgets selectedBudgets:[Budgets],
+        genres selectedGeneres:[Genres],
+        selectedSpecialCategories:[SpecialCategory],
+        selectedSpecialCategory2:[SpecialCategory2]
+    ){
+        showSearchedRestaurants = !(filterManager?.selectedGenres.isEmpty ?? true &&
+                                    filterManager?.selectedBudgets.isEmpty ?? true &&
+                                    filterManager?.selectedSpecialCategory.isEmpty ?? true &&
+                                    filterManager?.selectedSpecialCategory2.isEmpty ?? true &&
+                                    searchText.isEmpty && !searchSeeingArea)
         print("showsearchRestaurants:\(showSearchedRestaurants)")
         //Queryがkeyword=&genre=.....のようにならないように
         let checkedKeyword: String? = (keyword?.isEmpty == false) ? keyword : nil
@@ -106,16 +123,15 @@ extension MapViewModel{
             //        showNearbyRestaurantSheet = selectedRestaurant == nil
         let range = calculateRange(for: currentSeeingRegionSpan)
         if let currentSeeingRegion = currentSeeingRegionCenterCoordinate{
-            HotPepperAPIClient(
-                apiKey: APIKEY.key.rawValue
-            ).searchAllShops(
+            apiClient.searchAllShops(
                 keyword: checkedKeyword,
                 lat:currentSeeingRegion.latitude,
                 lon:currentSeeingRegion.longitude,
                 range:range,
                 genres:selectedGeneres,
                 budgets: selectedBudgets,
-                specialCategories: selectedSpecialCategories
+                specialCategories: selectedSpecialCategories,
+                specialCategories2 : selectedSpecialCategory2
                 
             ) {[weak self] result in
                 guard let self = self else{
@@ -181,11 +197,22 @@ extension MapViewModel{
                 guard !searchText.isEmpty else{
                     //NearbyRestaurantsを取得してからそれ以降　searchTextが空になった時でも検索する
                     if self.fetchedFirstTime{
-                        self.searchRestaurantsWithSelectedFilters(budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres, selectedSpecialCategories: filterManager.selectedSpecialCategory)
+                        self.searchRestaurantsWithSelectedFilters(
+                            budgets: filterManager.selectedBudgets,
+                            genres: filterManager.selectedGenres,
+                            selectedSpecialCategories: filterManager.selectedSpecialCategory,
+                            selectedSpecialCategory2: filterManager.selectedSpecialCategory2
+                        )
                     }
                     return
                 }
-                self.searchRestaurantsWithSelectedFilters(keyword: searchText, budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres,selectedSpecialCategories: filterManager.selectedSpecialCategory)
+                self.searchRestaurantsWithSelectedFilters(
+                    keyword: searchText,
+                    budgets: filterManager.selectedBudgets,
+                    genres: filterManager.selectedGenres,
+                    selectedSpecialCategories: filterManager.selectedSpecialCategory,
+                    selectedSpecialCategory2: filterManager.selectedSpecialCategory2
+                )
             }
             .store(in: &cancellables)
     }
