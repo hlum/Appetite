@@ -9,53 +9,53 @@ import SwiftUI
 import MapKit
 import Combine
 import SDWebImageSwiftUI
-
-final class NearbyRestaurantSheetViewModel: ObservableObject {
-    @Published var searchText: String = ""
-    private var nearbyRestaurants: Binding<[Shop]>
-    private var cancellables = Set<AnyCancellable>()
-    private var cameraPosition:Binding<CLLocationCoordinate2D?>
-    
-    init(nearbyRestaurants: Binding<[Shop]>,cameraPosition:Binding<CLLocationCoordinate2D?>) {
-        self.nearbyRestaurants = nearbyRestaurants
-        self.cameraPosition = cameraPosition
-        addSubscribers()
-    }
-    
-    private func addSubscribers() {
-        $searchText
-            .debounce(for: 0.5, scheduler: DispatchQueue.main)
-            .sink { [weak self] searchText in
-                self?.fetchRestaurants(searchText: searchText)
-            }
-            .store(in: &cancellables)
-    }
-    
-    private func fetchRestaurants(searchText: String) {
-        guard !searchText.isEmpty else{
-            return
-        }
-        guard let cameraPosition = self.cameraPosition.wrappedValue else{return}
-        HotPepperAPIClient(apiKey: APIKEY.key.rawValue).searchAllShops(
-            keyword: searchText,
-            lat:cameraPosition.latitude,
-            lon: cameraPosition.longitude
-        ) { [weak self] result in
-            DispatchQueue.main.async {
-                switch result{
-                case .success(let restaurants):
-                    self?.nearbyRestaurants.wrappedValue = restaurants.results.shops
-                case .failure(let error):
-                    print(error.localizedDescription)
-                }
-            }
-        }
-    }
-}
+//
+//final class NearbyRestaurantSheetViewModel: ObservableObject {
+//    @Published var searchText: String = ""
+//    private var nearbyRestaurants: Binding<[Shop]>
+//    private var cancellables = Set<AnyCancellable>()
+//    private var cameraPosition:Binding<CLLocationCoordinate2D?>
+//    
+//    init(nearbyRestaurants: Binding<[Shop]>,cameraPosition:Binding<CLLocationCoordinate2D?>) {
+//        self.nearbyRestaurants = nearbyRestaurants
+//        self.cameraPosition = cameraPosition
+//        addSubscribers()
+//    }
+//    
+//    private func addSubscribers() {
+//        $searchText
+//            .debounce(for: 0.5, scheduler: DispatchQueue.main)
+//            .sink { [weak self] searchText in
+//                self?.fetchRestaurants(searchText: searchText)
+//            }
+//            .store(in: &cancellables)
+//    }
+//    
+//    private func fetchRestaurants(searchText: String) {
+//        guard !searchText.isEmpty else{
+//            return
+//        }
+//        guard let cameraPosition = self.cameraPosition.wrappedValue else{return}
+//        HotPepperAPIClient(apiKey: APIKEY.key.rawValue).searchAllShops(
+//            keyword: searchText,
+//            lat:cameraPosition.latitude,
+//            lon: cameraPosition.longitude
+//        ) { [weak self] result in
+//            DispatchQueue.main.async {
+//                switch result{
+//                case .success(let restaurants):
+//                    self?.nearbyRestaurants.wrappedValue = restaurants.results.shops
+//                case .failure(let error):
+//                    print(error.localizedDescription)
+//                }
+//            }
+//        }
+//    }
+//}
 
 struct NearbyRestaurantSheetView: View {
     @Binding var restaurantsShowing: [Shop]
-    @StateObject private var vm: NearbyRestaurantSheetViewModel
+//    @StateObject private var vm: NearbyRestaurantSheetViewModel
     @Binding var selectedRestaurant:Shop?
     init(
         nearbyRestaurants:Binding<[Shop]>,
@@ -63,7 +63,7 @@ struct NearbyRestaurantSheetView: View {
         selectedRestaurant:Binding<Shop?>
     ) {
         self._restaurantsShowing = nearbyRestaurants
-        self._vm = StateObject(wrappedValue: NearbyRestaurantSheetViewModel(nearbyRestaurants: nearbyRestaurants, cameraPosition: cameraPosition))
+//        self._vm = StateObject(wrappedValue: NearbyRestaurantSheetViewModel(nearbyRestaurants: nearbyRestaurants, cameraPosition: cameraPosition))
         self._selectedRestaurant = selectedRestaurant
     }
     

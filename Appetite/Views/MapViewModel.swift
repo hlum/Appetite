@@ -11,6 +11,7 @@ import SwiftUI
 import Combine
 
 final class MapViewModel:ObservableObject{
+    @Published var progress:Double = 0.0
     private let apiClient:HotPepperAPIClient
     var searchSeeingArea : Bool = false
     @Published var showFilterSheet:Bool = false
@@ -72,11 +73,16 @@ final class MapViewModel:ObservableObject{
     private func getNearbyRestaurants(at userCoordinate:CLLocationCoordinate2D,count:Int = 100){
         self.apiClient.searchAllShops(lat: userCoordinate.latitude, lon: userCoordinate.longitude,range: 3,maxResults: count) { [weak self] result in
                 switch result{
-                case .success(let response):
+                case .completed(let response):
                     DispatchQueue.main.async {
                         self?.nearbyRestaurants = response.results.shops
+                        print("completed \(self?.nearbyRestaurants.count)")
                     }
-                case .failure(let error):
+                case .progress(let progress):
+                    DispatchQueue.main.async {
+                        self?.progress = progress
+                    }
+                case .error(let error):
                     DispatchQueue.main.async{
                         self?.nearbyRestaurants = []
                     }
@@ -139,20 +145,26 @@ extension MapViewModel{
                     return
                 }
                 switch result{
-                case .success(let response):
+                case .completed(let response):
                     DispatchQueue.main.async{
                         print("Success")
+                        print("COUNT searchedRestaurants:\(self.searchedRestaurants.count)")
+                        print("COUNT nearbyRestaurants:\(self.nearbyRestaurants.count)")
                         withAnimation{
                             self.searchedRestaurants = response.results.shops
-                            print("COUNT searchedRestaurants:\(self.searchedRestaurants.count)")
-                            print("COUNT nearbyRestaurants:\(self.nearbyRestaurants.count)")
+                            print("Updated searchedRestaurants: \(self.searchedRestaurants.count)")
                         }
                     }
-                case .failure(let error):
+                case .progress(let progress):
+                    DispatchQueue.main.async{
+                        self.progress = progress
+                        print("PROGRESS: \(progress)")
+                    }
+                case .error(let error):
                     DispatchQueue.main.async{
                         self.searchedRestaurants = []
+                        print(error.localizedDescription)
                     }
-                    print(error.localizedDescription)
                 }
                 
             }
@@ -188,7 +200,6 @@ extension MapViewModel{
     }
     
     private func addSubscriberToSearchText(){
-        
         $searchText
             .debounce(for: 1, scheduler: DispatchQueue.main)
             .sink { [weak self] searchText in
