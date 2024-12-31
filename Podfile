@@ -6,4 +6,6 @@ target 'Appetite' do
   pod 'SDWebImageSwiftUI', '~> 2.0'
   pod 'Firebase/Auth'
   pod 'Firebase/Firestore'
+  pod 'lottie-ios'
+
 end

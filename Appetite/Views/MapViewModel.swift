@@ -11,7 +11,7 @@ import SwiftUI
 import Combine
 
 final class MapViewModel:ObservableObject{
-    @Published var progress:Double = 0.0
+    @Published var progress:Double = 0.1
     private let apiClient:HotPepperAPIClient
     var searchSeeingArea : Bool = false
     @Published var showFilterSheet:Bool = false
@@ -76,7 +76,7 @@ final class MapViewModel:ObservableObject{
                 case .completed(let response):
                     DispatchQueue.main.async {
                         self?.nearbyRestaurants = response.results.shops
-                        print("completed \(self?.nearbyRestaurants.count)")
+                        self?.progress = 1.0
                     }
                 case .progress(let progress):
                     DispatchQueue.main.async {
@@ -85,6 +85,7 @@ final class MapViewModel:ObservableObject{
                 case .error(let error):
                     DispatchQueue.main.async{
                         self?.nearbyRestaurants = []
+                        self?.progress = 1.0
                     }
                     print(error.localizedDescription)
                 }
@@ -122,7 +123,6 @@ extension MapViewModel{
                                     filterManager?.selectedSpecialCategory.isEmpty ?? true &&
                                     filterManager?.selectedSpecialCategory2.isEmpty ?? true &&
                                     searchText.isEmpty && !searchSeeingArea)
-        print("showsearchRestaurants:\(showSearchedRestaurants)")
         //Queryがkeyword=&genre=.....のようにならないように
         let checkedKeyword: String? = (keyword?.isEmpty == false) ? keyword : nil
 
@@ -147,22 +147,22 @@ extension MapViewModel{
                 switch result{
                 case .completed(let response):
                     DispatchQueue.main.async{
-                        print("Success")
                         print("COUNT searchedRestaurants:\(self.searchedRestaurants.count)")
                         print("COUNT nearbyRestaurants:\(self.nearbyRestaurants.count)")
                         withAnimation{
                             self.searchedRestaurants = response.results.shops
-                            print("Updated searchedRestaurants: \(self.searchedRestaurants.count)")
+                            self.progress = 1.0
                         }
                     }
                 case .progress(let progress):
                     DispatchQueue.main.async{
                         self.progress = progress
-                        print("PROGRESS: \(progress)")
+                        print("PROGRESS : \(self.progress)")
                     }
                 case .error(let error):
                     DispatchQueue.main.async{
                         self.searchedRestaurants = []
+                        self.progress = 1.0
                         print(error.localizedDescription)
                     }
                 }

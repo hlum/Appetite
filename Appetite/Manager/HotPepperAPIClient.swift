@@ -241,7 +241,6 @@ class HotPepperAPIClient: ObservableObject {
             do {
                 let decoder = JSONDecoder()
                 let response = try decoder.decode(HotPepperResponse.self, from: data)
-                print("Decoded response shops count: \(response.results.shops.count)")
                 completion(.completed(response))
             } catch {
                 print("Decode error: \(error)")
