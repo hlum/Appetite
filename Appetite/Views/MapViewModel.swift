@@ -60,7 +60,7 @@ final class MapViewModel:ObservableObject{
     @MainActor
     private func showAlert(for message:String){
 #warning("Custom error bug を　直して！！")
-        guard !message.contains("Appetite.CustomErrors error 0")else{return}
+        guard !(message.contains("Appetite.CustomErrors error 0") || message.contains("The operation")) else{return}
         showAlert = true
         alertMessage = message
     }

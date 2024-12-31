@@ -106,6 +106,16 @@ enum Capacity: Codable {
             try container.encode(stringValue)
         }
     }
+    
+    // Computed property for a readable string
+    var displayValue: String {
+        switch self {
+        case .integer(let intValue):
+            return "\(intValue)"
+        case .string(let stringValue):
+            return stringValue
+        }
+    }
 }
 
 struct SubGenre:Codable{

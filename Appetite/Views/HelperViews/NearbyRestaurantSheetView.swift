@@ -9,53 +9,10 @@ import SwiftUI
 import MapKit
 import Combine
 import SDWebImageSwiftUI
-//
-//final class NearbyRestaurantSheetViewModel: ObservableObject {
-//    @Published var searchText: String = ""
-//    private var nearbyRestaurants: Binding<[Shop]>
-//    private var cancellables = Set<AnyCancellable>()
-//    private var cameraPosition:Binding<CLLocationCoordinate2D?>
-//    
-//    init(nearbyRestaurants: Binding<[Shop]>,cameraPosition:Binding<CLLocationCoordinate2D?>) {
-//        self.nearbyRestaurants = nearbyRestaurants
-//        self.cameraPosition = cameraPosition
-//        addSubscribers()
-//    }
-//    
-//    private func addSubscribers() {
-//        $searchText
-//            .debounce(for: 0.5, scheduler: DispatchQueue.main)
-//            .sink { [weak self] searchText in
-//                self?.fetchRestaurants(searchText: searchText)
-//            }
-//            .store(in: &cancellables)
-//    }
-//    
-//    private func fetchRestaurants(searchText: String) {
-//        guard !searchText.isEmpty else{
-//            return
-//        }
-//        guard let cameraPosition = self.cameraPosition.wrappedValue else{return}
-//        HotPepperAPIClient(apiKey: APIKEY.key.rawValue).searchAllShops(
-//            keyword: searchText,
-//            lat:cameraPosition.latitude,
-//            lon: cameraPosition.longitude
-//        ) { [weak self] result in
-//            DispatchQueue.main.async {
-//                switch result{
-//                case .success(let restaurants):
-//                    self?.nearbyRestaurants.wrappedValue = restaurants.results.shops
-//                case .failure(let error):
-//                    print(error.localizedDescription)
-//                }
-//            }
-//        }
-//    }
-//}
+
 
 struct NearbyRestaurantSheetView: View {
     @Binding var restaurantsShowing: [Shop]
-//    @StateObject private var vm: NearbyRestaurantSheetViewModel
     @Binding var selectedRestaurant:Shop?
     init(
         nearbyRestaurants:Binding<[Shop]>,
@@ -63,7 +20,6 @@ struct NearbyRestaurantSheetView: View {
         selectedRestaurant:Binding<Shop?>
     ) {
         self._restaurantsShowing = nearbyRestaurants
-//        self._vm = StateObject(wrappedValue: NearbyRestaurantSheetViewModel(nearbyRestaurants: nearbyRestaurants, cameraPosition: cameraPosition))
         self._selectedRestaurant = selectedRestaurant
     }
     
@@ -71,7 +27,7 @@ struct NearbyRestaurantSheetView: View {
         NavigationStack {
             List {
                 Section{
-                    LazyVStack{
+                    LazyVStack(alignment:.leading){
                         if !restaurantsShowing.isEmpty{
                             ForEach(restaurantsShowing) { shop in
                                 listItemView(for: shop)
@@ -87,43 +43,78 @@ struct NearbyRestaurantSheetView: View {
                     Text("レストラン一覧")
                 }
             }
+            .listStyle(.plain)
 //            .navigationTitle("\(restaurantsShowing.count)")
         }
     }
 }
 
-
-extension NearbyRestaurantSheetView{
-    private func listItemView(for shop:Shop) -> some View{
-        HStack{
-            if let logoImage = shop.logoImage,
-               let url = URL(string: logoImage){
+extension NearbyRestaurantSheetView {
+    private func listItemView(for shop: Shop) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            if let logoImage = shop.logoImage, let url = URL(string: logoImage) {
                 WebImage(url: url)
-                    .placeholder(content: {
+                    .placeholder {
                         shop.genre.image
                             .resizable()
                             .scaledToFill()
-                            .frame(width:50,height:50)
-                            .cornerRadius(10)
-                    })
+                            .frame(width: 50, height: 50)
+                            .cornerRadius(8)
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
+                    }
                     .resizable()
                     .scaledToFill()
-                    .frame(width:50,height:50)
-                    .cornerRadius(10)
-                Spacer()
-                VStack{
-                    Text(shop.name)
-                        .foregroundStyle(.systemBlack)
-                        .padding()
-                        .background(Color.systemWhite)
-                        .cornerRadius(10)
-                }
-                Spacer()
+                    .frame(width: 50, height: 50)
+                    .cornerRadius(8)
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
             }
-        }
 
+            VStack(alignment: .leading, spacing: 4) {
+                Text(shop.name)
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+
+                Text(shop.address)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .lineLimit(2)
+                    .truncationMode(.tail)
+
+                HStack {
+                    Image(systemName:"person.2")
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                    Text("宴会収容人数: \(shop.capacity?.displayValue ?? "不明")")
+                        .font(.footnote)
+                        .foregroundColor(.primary)
+                }
+
+                if let cardInfo = shop.card, !cardInfo.isEmpty {
+                    HStack {
+                        Image(systemName: "creditcard.fill")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                        Text("カード: \(cardInfo)")
+                            .font(.footnote)
+                            .foregroundColor(.primary)
+                    }
+                }
+            }
+            .padding(.vertical, 4)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemBackground))
+                .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+        )
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
+
 
 #Preview {
     let dummyShops = [
@@ -152,7 +143,7 @@ extension NearbyRestaurantSheetView{
                     close: "9:00 PM",
                     parking: "Yes",
                     nonSmoking: "Yes",
-                    card: "Visa"
+                    card: "利用可"
                 )
             ]
     NearbyRestaurantSheetView(nearbyRestaurants: .constant(dummyShops), cameraPosition: .constant(CLLocationCoordinate2D(latitude: 35.7020691, longitude: 139.7753269)), selectedRestaurant: .constant(dummyShops[0]))
