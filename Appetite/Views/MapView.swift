@@ -27,8 +27,8 @@ struct MapView: View {
                     restaurantAnnotations(restaurant: restaurant)
                 }
             }
-//            .brightness(vm.progress < 1.0 ? -0.3 : 0.0)
-            .brightness(-0.3)
+            .brightness(vm.progress < 1.0 ? -0.3 : 0.0)
+//            .brightness(-0.3)
             .onMapCameraChange(frequency: .onEnd, { context in
                 withAnimation(.bouncy) {
                     cameraPositionChanged = true
@@ -96,12 +96,6 @@ struct MapView: View {
                 VStack{
                     LottieView(name: "LoadingAnimation", loopMode: .loop)
                         .frame(height:400)
-//                    ProgressView(value: vm.progress*100,total: 100)
-//                        .padding()
-//                        .background(.white)
-//                        .cornerRadius(20)
-//                        .padding(.horizontal)
-//                        .transition(.slide)
                 }
             }
         }
