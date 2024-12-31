@@ -69,7 +69,11 @@ struct MapView: View {
                     }
                 }
             }
-
+            .alert("エラ", isPresented: $vm.showAlert, actions: {
+                
+            }, message: {
+                Text(vm.alertMessage)
+            })
             .alert(isPresented: $vm.showLocationPermissionAlert) {
                 LocationPermissionAlert()
             }

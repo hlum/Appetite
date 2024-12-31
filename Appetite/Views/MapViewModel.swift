@@ -11,8 +11,13 @@ import SwiftUI
 import Combine
 
 final class MapViewModel:ObservableObject{
+    @Published var showAlert:Bool = false
+    @Published var alertMessage:String = ""
+    
     @Published var progress:Double = 0.1
+    
     private let apiClient:HotPepperAPIClient
+    
     var searchSeeingArea : Bool = false
     @Published var showFilterSheet:Bool = false
     weak var filterManager:FilterManger?
@@ -51,7 +56,15 @@ final class MapViewModel:ObservableObject{
     func setUp(_ filterManager:FilterManger){//passed the environment object from the view
         self.filterManager = filterManager
     }
-        
+      
+    @MainActor
+    private func showAlert(for message:String){
+#warning("Custom error bug を　直して！！")
+        guard !message.contains("Appetite.CustomErrors error 0")else{return}
+        showAlert = true
+        alertMessage = message
+    }
+    
     func getUserLocationAndNearbyRestaurants(){
         locationManager.onLocationUpdate = {[weak self] result in
             guard let self = self else{return}
@@ -65,6 +78,9 @@ final class MapViewModel:ObservableObject{
                     fetchedFirstTime = true
                 }
             case .failure(let error):
+                Task{
+                    await self.showAlert(for: error.localizedDescription)
+                }
                 print(error.localizedDescription)
             }
         }
@@ -86,6 +102,7 @@ final class MapViewModel:ObservableObject{
                     DispatchQueue.main.async{
                         self?.nearbyRestaurants = []
                         self?.progress = 1.0
+                        self?.showAlert(for: error.localizedDescription)
                     }
                     print(error.localizedDescription)
                 }
@@ -164,6 +181,7 @@ extension MapViewModel{
                         self.searchedRestaurants = []
                         self.progress = 1.0
                         print(error.localizedDescription)
+                        self.showAlert(for: error.localizedDescription)
                     }
                 }
                 
