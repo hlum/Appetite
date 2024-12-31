@@ -30,10 +30,13 @@ struct NearbyRestaurantSheetView: View {
                     LazyVStack(alignment:.leading){
                         if !restaurantsShowing.isEmpty{
                             ForEach(restaurantsShowing) { shop in
-                                listItemView(for: shop)
-                                    .onTapGesture {
-                                        selectedRestaurant = shop
-                                    }
+                                Button {
+                                    selectedRestaurant = shop
+                                } label: {
+                                    listItemView(for: shop)
+
+                                }
+                                
                             }
                         }else{
                             ContentUnavailableView("検索結果に一致するものはありません。", systemImage: "magnifyingglass")
@@ -109,7 +112,7 @@ extension NearbyRestaurantSheetView {
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color(.systemBackground))
-                .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+                .shadow(color: Color.systemBlack.opacity(0.1), radius: 4, x: 0, y: 2)
         )
         .frame(maxWidth: .infinity, alignment: .leading)
     }

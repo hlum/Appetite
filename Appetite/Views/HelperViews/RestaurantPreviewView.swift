@@ -7,11 +7,46 @@
 
 import SwiftUI
 import SDWebImageSwiftUI
+import CoreLocation
+
+final class RestaurantPreviewViewModel:ObservableObject{
+    @Published var distance:Double? = nil
+    let locationManger = LocationManager()
+    private var restaurant:Shop?
+    init(){
+        locationManger.onLocationUpdate = {[weak self] result in
+            switch result{
+            case .success(let userCoordinate):
+                self?.getDistance(from: userCoordinate)
+            case .failure(let error):
+                print(error.localizedDescription)
+            }
+        }
+    }
+    
+    func setRestaurant(_ restaurant:Shop){
+        self.restaurant = restaurant
+    }
+    
+    private func getDistance(from userCoordinate:CLLocationCoordinate2D){
+        guard let restaurantLon = restaurant?.lon,
+              let restaurantLat = restaurant?.lat else{
+            print("can't get the restaurant coordinates")
+            return
+        }
+        let userLocation = CLLocation(latitude: userCoordinate.latitude, longitude: userCoordinate.longitude)
+        let shopLocation = CLLocation(latitude: restaurantLat, longitude: restaurantLon)
+        
+        self.distance = userLocation.distance(from: shopLocation)/1000
+    }
+
+}
 
 struct RestaurantPreviewView: View {
+    @StateObject private var vm = RestaurantPreviewViewModel()
     let restaurant:Shop
     var body: some View {
-            HStack(alignment:.bottom,spacing: 0){
+        HStack(alignment:.center,spacing: 0){
                 VStack(alignment:.leading,spacing: 16){
                     imageSection
                     titleSection
@@ -23,6 +58,7 @@ struct RestaurantPreviewView: View {
                     } label: {
                         Text("経路")
                             .font(.headline)
+                            .foregroundStyle(.systemWhite)
                             .frame(width: 125,height:35)
                     }
                     .buttonStyle(.borderedProminent)
@@ -31,6 +67,7 @@ struct RestaurantPreviewView: View {
                     } label: {
                         Text("詳細")
                             .font(.headline)
+                            .foregroundStyle(.systemWhite)
                             .frame(width: 125,height:35)
                     }
                     .buttonStyle(.borderedProminent)
@@ -38,10 +75,14 @@ struct RestaurantPreviewView: View {
 
                 }
             }
+            .onAppear{
+                vm.setRestaurant(restaurant)
+            }
             .padding(20)
+            .foregroundStyle(.systemBlack)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(.white)
+                    .fill(.systemWhite)
                     .offset(y:65)
             )
             .cornerRadius(30)
@@ -76,7 +117,7 @@ extension RestaurantPreviewView{
             }
         }
         .padding(6)
-        .background(Color.white)
+        .background(.systemWhite)
         .cornerRadius(10)
     }
     
@@ -86,12 +127,20 @@ extension RestaurantPreviewView{
             Text(restaurant.name)
                 .font(.title2)
                 .fontWeight(.bold)
+                .lineLimit(2)
             
             openTime
         
             Text("\(restaurant.genre.name)\n\(restaurant.subGenre?.name ?? "")")
                 .font(.subheadline)
                 .bold()
+            if let distance = vm.distance{
+                let distanceInString = String(format: "%.2f", distance).replacingOccurrences(of: "\\.0$", with: "", options: .regularExpression)
+                Text("\(distanceInString)km")
+            }else{
+                ProgressView()
+                    .progressViewStyle(.circular)
+            }
         }
         .frame(maxWidth: .infinity,alignment: .leading)
 
