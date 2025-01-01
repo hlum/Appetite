@@ -133,7 +133,8 @@ struct DetailSheetView: View {
     }
     
     private func formatOperatingHours(_ rawString: String?) -> String {
-        guard let rawString = rawString else{
+        guard let rawString = rawString,
+            !rawString.isEmpty else{
             return "不明"
         }
         let pattern = "(\\d{2}:\\d{2}～\\d{2}:\\d{2})(?=\\d{2}:\\d{2}～\\d{2}:\\d{2})"//時間のパタン 例：12:00
@@ -147,7 +148,8 @@ struct DetailSheetView: View {
         return formattedString
     }
     private func formatBudgetString(_ rawString:String?) -> String{
-        guard let rawString = rawString else{
+        guard let rawString = rawString,
+              !rawString.isEmpty else{
             return "不明"
         }
         let formattedString = rawString
