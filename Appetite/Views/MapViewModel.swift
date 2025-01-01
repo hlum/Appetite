@@ -11,6 +11,14 @@ import SwiftUI
 import Combine
 
 final class MapViewModel:ObservableObject{
+    
+    //ROUTES STUFFS
+    @Published var transportType:MKDirectionsTransportType = .transit
+    @Published var availableRoutes:[MKRoute] = []
+    @Published var selectedRoute:MKRoute? = nil
+    @Published var showRoutesSheet:Bool = false
+    
+    
     @Published var showDetailSheetView:Bool = false
     
     @Published var showAlert:Bool = false
@@ -134,6 +142,32 @@ extension MapViewModel{
         }
     }
 }
+
+extension MapViewModel{
+    func getRountes(to destination:CLLocationCoordinate2D){
+        let request = MKDirections.Request()
+        guard let userLocation = self.userLocation else{
+            print("Can't get user Location For the route")
+            return
+        }
+        request.source = MKMapItem(placemark: MKPlacemark(coordinate: userLocation))
+        request.destination = MKMapItem(placemark: MKPlacemark(coordinate: destination))
+        request.transportType = transportType
+        
+        Task{
+            do{
+                let directions = MKDirections(request: request)
+                let response = try await directions.calculate()
+                withAnimation {
+                    availableRoutes = response.routes
+                }
+            }catch{
+                print("Error getting directions:\(error.localizedDescription)")
+            }
+        }
+    }
+}
+
 //MARK: Filtering stuffs
 extension MapViewModel{
     

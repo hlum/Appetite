@@ -38,6 +38,9 @@ struct MapView: View {
                 vm.currentSeeingRegionCenterCoordinate = context.camera.centerCoordinate//get the coordinate of the region dragged by user
             })
             .mapStyle(mapStyle == .hybrid ? .hybrid : .standard)
+            .sheet(isPresented: $vm.showRoutesSheet, content: {
+                Text("routes")
+            })
             .sheet(
                 isPresented: $vm.showNearbyRestaurantSheet,
                 content: {
@@ -59,7 +62,7 @@ struct MapView: View {
             })
             .sheet(isPresented: $vm.showDetailSheetView, content: {
                 if let selectedRestaurant = vm.selectedRestaurant{
-                    DetailSheetView(shop:selectedRestaurant)
+                    DetailSheetView(shop:selectedRestaurant,showRoutesSheet: $vm.showRoutesSheet)
                 }
             })
             .overlay(alignment: .bottomTrailing, content: {
@@ -159,7 +162,8 @@ extension MapView{
                     if restaurant == selectedRestaurant {
                         RestaurantPreviewView(
                             selectedRestaurant: selectedRestaurant,
-                            showDetailSheetView: $vm.showDetailSheetView
+                            showDetailSheetView: $vm.showDetailSheetView,
+                            showRoutesSheet: $vm.showRoutesSheet
                         )
                         .shadow(color: Color.black.opacity(0.6), radius: 20)
                         .padding()
