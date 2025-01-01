@@ -8,8 +8,10 @@
 import SwiftUI
 import SDWebImageSwiftUI
 import CoreLocation
+import MapKit
 
 final class RestaurantPreviewViewModel:ObservableObject{
+    @Published var lookAroundScence:MKLookAroundScene?
     @Published var distance:Double? = nil
     let locationManger = LocationManager()
     private var restaurant:Shop?
@@ -39,6 +41,19 @@ final class RestaurantPreviewViewModel:ObservableObject{
         
         self.distance = userLocation.distance(from: shopLocation)/1000
     }
+    
+    @MainActor
+    func fetchLookAroundScene()async{
+        guard let restaurant = self.restaurant else{return}
+        let coordinate = CLLocationCoordinate2D(
+            latitude: restaurant.lat,
+            longitude: restaurant.lon
+        )
+        let request = MKLookAroundSceneRequest(coordinate: coordinate)
+        lookAroundScence = try? await request.scene
+        
+    }
+
 
 }
 
@@ -81,15 +96,30 @@ struct RestaurantPreviewView: View {
 
                 }
             }
+        .overlay(alignment: .topTrailing, content: {
+            
+            LookAroundPreview(scene: $vm.lookAroundScence)
+                .frame(width:80,height:80)
+                .cornerRadius(10)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(.systemWhite, lineWidth: 5) // Add border
+                )
+                .shadow(color:.systemWhite,radius:1,y:2)
+                .offset(y:-20)
+        })
             .onAppear{
                 vm.setRestaurant(selectedRestaurant)
+                Task{
+                    await vm.fetchLookAroundScene()
+                }
             }
             .padding(20)
             .foregroundStyle(.systemBlack)
             .background(
                 RoundedRectangle(cornerRadius: 10)
                     .fill(.systemWhite)
-                    .offset(y:65)
+                    .offset(y:85)
                     .onTapGesture {
                         showDetailSheetView = true
                     }
@@ -145,7 +175,11 @@ extension RestaurantPreviewView{
                 .bold()
             if let distance = vm.distance{
                 let distanceInString = String(format: "%.2f", distance).replacingOccurrences(of: "\\.0$", with: "", options: .regularExpression)
+                Text("半径距離")
+                    .font(.caption)
+                    .bold()
                 Text("\(distanceInString)km")
+                    .font(.caption2)
             }else{
                 ProgressView()
                     .progressViewStyle(.circular)
