@@ -56,6 +56,11 @@ struct MapView: View {
                     .environmentObject(filterManager)
                     .presentationDetents([.medium,.large])
             })
+            .sheet(isPresented: $vm.showDetailSheetView, content: {
+                if let selectedRestaurant = vm.selectedRestaurant{
+                    DetailSheetView(shop:selectedRestaurant)
+                }
+            })
             .overlay(alignment: .bottomTrailing, content: {
                 ToolBar
                     .padding(.bottom,150)
@@ -151,7 +156,7 @@ extension MapView{
             ForEach(vm.showSearchedRestaurants ? vm.searchedRestaurants : vm.nearbyRestaurants) { restaurant in
                 if let selectedRestaurant = vm.selectedRestaurant{
                     if restaurant == selectedRestaurant{
-                        RestaurantPreviewView(restaurant: selectedRestaurant)
+                        RestaurantPreviewView(selectedRestaurant: selectedRestaurant,showDetailSheetView:$vm.showDetailSheetView)
                             .shadow(color: Color.black.opacity(0.6), radius: 20)
                             .padding()
                             .frame(maxWidth: .infinity)
@@ -159,6 +164,7 @@ extension MapView{
                                 insertion: .move(edge: .trailing),
                                 removal: .move(edge: .leading)))
                     }
+                    
                 }
             }
         }

@@ -89,7 +89,7 @@ extension NearbyRestaurantSheetView {
                     Image(systemName:"person.2")
                         .font(.footnote)
                         .foregroundColor(.secondary)
-                    Text("宴会収容人数: \(shop.capacity?.displayValue ?? "不明")")
+                    Text("宴会収容人数: \(shop.partyCapacity?.displayValue ?? "不明")")
                         .font(.footnote)
                         .foregroundColor(.primary)
                 }
@@ -130,12 +130,12 @@ extension NearbyRestaurantSheetView {
                     genre: Genre(code: "1", name: "居酒屋"), subGenre: SubGenre(name: "ダイニングバー", code: "fadsf"),
                     access: "2 mins from Station",
                     urls: URLs(pc: "https://example.com"),
-                    photo: Photo(pc: PCPhoto(l: "large_url", m: "medium_url", s: "small_url")),
+                    photo: Photo(pc: PCPhoto(l: "large_url", m: "medium_url", s: "small_url"), mobile: MobilePhoto(l: "large", s: "small")), catchPharse: "afd",
                     logoImage: "logoA.png",
                     nameKana: "レストラン A",
                     stationName: "Station A",
                     ktaiCoupon: 10,
-                    budget: Budget(code: "1", name: "Affordable", average: "ランチ：～999円、ディナー：3000円～4000円", budgetMemo: "Reasonable"),
+                    budget: Budget(code: "1", name: "Affordable", average: "ランチ：～999円、ディナー：3000円～4000円", budgetMemo: "Reasonable"), partyCapacity: .string("10"),
                     capacity: .integer(10),
                     wifi: "Available",
                     course: "Yes",

@@ -43,12 +43,14 @@ struct Shop: Codable,Identifiable,Equatable {
     let access: String
     let urls: URLs
     let photo: Photo
+    let catchPharse:String
     
     let logoImage: String?
     let nameKana: String?
     let stationName: String?
     let ktaiCoupon: Int?
     let budget: Budget?
+    let partyCapacity:PartyCapacity?
     let capacity: Capacity?
     let wifi: String?
     let course: String?
@@ -64,6 +66,7 @@ struct Shop: Codable,Identifiable,Equatable {
     enum CodingKeys: String, CodingKey {
         case id, name, address, lat, genre, access, urls, photo
         case lon = "lng"
+        case partyCapacity = "party_capacity"
         case logoImage = "logo_image"
         case nameKana = "name_kana"
         case stationName = "station_name"
@@ -76,6 +79,46 @@ struct Shop: Codable,Identifiable,Equatable {
         case nonSmoking = "non_smoking"
         case card
         case subGenre = "sub_genre"
+        case catchPharse = "catch"
+    }
+}
+
+enum PartyCapacity:Codable{
+    case integer(Int)
+    case string(String)
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let intValue = try? container.decode(Int.self) {
+            self = .integer(intValue)
+        } else if let stringValue = try? container.decode(String.self) {
+            self = .string(stringValue)
+        } else {
+            throw DecodingError.typeMismatch(Capacity.self, DecodingError.Context(
+                codingPath: decoder.codingPath,
+                debugDescription: "Expected Int or String for partyCapacity"
+            ))
+        }
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .integer(let intValue):
+            try container.encode(intValue)
+        case .string(let stringValue):
+            try container.encode(stringValue)
+        }
+    }
+    
+    // Computed property for a readable string
+    var displayValue: String {
+        switch self {
+        case .integer(let intValue):
+            return "\(intValue)"
+        case .string(let stringValue):
+            return stringValue
+        }
     }
 }
 
@@ -186,8 +229,13 @@ struct URLs: Codable {
 
 struct Photo: Codable {
     let pc: PCPhoto
+    let mobile:MobilePhoto
 }
 
+struct MobilePhoto:Codable{
+    let l:String
+    let s:String
+}
 struct PCPhoto: Codable {
     let l: String
     let m: String
