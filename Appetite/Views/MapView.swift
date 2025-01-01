@@ -11,6 +11,7 @@ import Lottie
 
 //MARK: MapView body
 struct MapView: View {
+    @State var previewDragOffset:CGSize = .zero
     @State var showProgressView:Bool = false
     @State var cameraPositionChanged = false
     @EnvironmentObject var filterManager:FilterManger
@@ -150,25 +151,40 @@ extension MapView{
         .transition(.asymmetric(insertion: .move(edge: .top), removal: .move(edge: .top)))
     }
     
-    private var previewsStack:some View{
-        VStack{
+    private var previewsStack: some View {
+        VStack {
             Spacer()
             ForEach(vm.showSearchedRestaurants ? vm.searchedRestaurants : vm.nearbyRestaurants) { restaurant in
-                if let selectedRestaurant = vm.selectedRestaurant{
-                    if restaurant == selectedRestaurant{
-                        RestaurantPreviewView(selectedRestaurant: selectedRestaurant,showDetailSheetView:$vm.showDetailSheetView)
-                            .shadow(color: Color.black.opacity(0.6), radius: 20)
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .transition(.asymmetric(
-                                insertion: .move(edge: .trailing),
-                                removal: .move(edge: .leading)))
+                if let selectedRestaurant = vm.selectedRestaurant {
+                    if restaurant == selectedRestaurant {
+                        RestaurantPreviewView(
+                            selectedRestaurant: selectedRestaurant,
+                            showDetailSheetView: $vm.showDetailSheetView
+                        )
+                        .shadow(color: Color.black.opacity(0.6), radius: 20)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .transition(.asymmetric(
+                            insertion: .move(edge: .trailing),
+                            removal: .move(edge: .bottom)
+                        ))
+                        .offset(previewDragOffset)
+                        .gesture(
+                            DragGesture()
+                                .onChanged { value in
+                                    handleDragChange(value)
+                                }
+                                .onEnded { value in
+                                    handleDrageEnd(value)
+                                }
+                        )
                     }
-                    
                 }
             }
         }
     }
+    
+    
     private var searchBarAndFilters:some View{
         ZStack{
             VStack{
@@ -410,6 +426,93 @@ extension MapView{
             
             vm.searchRestaurantsWithSelectedFilters(keyword: vm.searchText,budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres, selectedSpecialCategories: filterManager.selectedSpecialCategory,selectedSpecialCategory2:filterManager.selectedSpecialCategory2)
         }
+    }
+}
+
+//MARK: Gestureの処理
+extension MapView{
+    private func handleDragChange(_ value:DragGesture.Value){
+        let verticalTranslation = abs(value.translation.height)
+        let horizontalTranslation = abs(value.translation.width)
+        
+        if verticalTranslation<60{
+            withAnimation(.spring(response: 0.1, dampingFraction: 1, blendDuration: 0)) {
+                previewDragOffset.height = value.translation.height
+            }
+        }
+        if value.translation.height < -100{//終わった時に開くじゃなくてSwipeの感が欲しいのでここで処理
+            //swipe up
+            previewDragOffset.height = value.translation.height
+            vm.showDetailSheetView = true
+            DispatchQueue.main.asyncAfter(deadline: .now()+0.8){//すぐ.zeroにならないように
+                previewDragOffset = .zero //Sheetが表示されると handleDrageEnd　が呼ばれないから　ここでリセットさせる
+            }
+        }
+        
+        if horizontalTranslation < 50{
+            withAnimation(.spring(response: 0.1, dampingFraction: 1, blendDuration: 0)) {
+                previewDragOffset.width = value.translation.width
+//                previewDragOffset = .zero //Sheetが表示されると handleDrageEnd　が呼ばれないから　ここでリセットさせる
+            }
+        }
+    }
+    private func handleDrageEnd(_ value:DragGesture.Value){
+        withAnimation(.spring(response: 0.1, dampingFraction: 1, blendDuration: 0)) {
+            if value.translation.height > 100 {
+                // swipe down
+                vm.selectedRestaurant = nil
+            }
+            if value.translation.width < -70{
+                //swipe left
+                handleLeftSwipe(value:value)
+            }
+            if value.translation.width > 70{
+                //swipe right
+                handleRightSwipe(value:value)
+            }
+            previewDragOffset = .zero
+        }
+    }
+    
+    private func handleRightSwipe(value:DragGesture.Value){
+        let currentShowingRestaurants = vm.showSearchedRestaurants ? vm.searchedRestaurants : vm.nearbyRestaurants
+        //get the current selectedRestaurants index
+        guard let currentIndex = currentShowingRestaurants.firstIndex(where: {$0 == vm.selectedRestaurant})else{
+            print("Could not find current Index in restaucurrentShowingRestaurants array!")
+            return
+        }
+        let previousIndex = currentIndex-1
+        guard currentShowingRestaurants.indices.contains(previousIndex) else{
+            //the start of the currentShowingRestaurants array
+            //restart from last item
+            guard let lastRestaurant = currentShowingRestaurants.last else{return}
+            vm.showRestaurant(restaurant: lastRestaurant)
+            return
+        }
+        let previousRestaurant = currentShowingRestaurants[previousIndex]
+        vm.showRestaurant(restaurant: previousRestaurant)
+    }
+    
+    private func handleLeftSwipe(value:DragGesture.Value){
+        let currentShowingRestaurants = vm.showSearchedRestaurants ? vm.searchedRestaurants : vm.nearbyRestaurants
+        
+        //get the current selectedRestaurants index
+        guard let currentIndex = currentShowingRestaurants.firstIndex(where: {$0 == vm.selectedRestaurant})else{
+            print("Could not find current Index in restaucurrentShowingRestaurants array!")
+            return
+        }
+        
+        let nextIndex = currentIndex+1
+        guard currentShowingRestaurants.indices.contains(nextIndex) else{
+            //the end of the currentShowingRestaurants array
+            //restart from 0
+            guard let firstRestaurant = currentShowingRestaurants.first else {return}
+            vm.showRestaurant(restaurant: firstRestaurant)
+            return
+        }
+        
+        let nextRestaurant = currentShowingRestaurants[nextIndex]
+        vm.showRestaurant(restaurant: nextRestaurant)
     }
 }
 

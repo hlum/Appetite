@@ -127,6 +127,15 @@ final class MapViewModel:ObservableObject{
     }
     
 }
+
+//MARK: View Functions
+extension MapViewModel{
+    func showRestaurant(restaurant:Shop){
+        withAnimation(.bouncy) {
+            selectedRestaurant = restaurant
+        }
+    }
+}
 //MARK: Filtering stuffs
 extension MapViewModel{
     
