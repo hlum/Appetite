@@ -52,6 +52,10 @@ struct RestaurantPreviewView: View {
                     imageSection
                     
                     titleSection
+                        .onTapGesture {
+                            showDetailSheetView = true
+                        }
+
                 }
             
                 VStack(spacing: 8) {
