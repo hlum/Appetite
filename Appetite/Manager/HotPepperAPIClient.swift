@@ -65,7 +65,6 @@ class HotPepperAPIClient: ObservableObject {
             count: 1
         ) {[weak self] result in
             guard let self = self else{
-                print("lose the object")
                 return
             }
             switch result {

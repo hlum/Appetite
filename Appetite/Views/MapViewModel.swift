@@ -74,8 +74,6 @@ final class MapViewModel:ObservableObject{
             case .success(let userCoordinate):
                 self.userLocation = userCoordinate
                 if !self.fetchedFirstTime{ //画面が表示した一回目だけ
-                    print("user coordinate at the first time")
-                    dump(userCoordinate)
                     self.getNearbyRestaurants(at: userCoordinate)
                     fetchedFirstTime = true
                 }
@@ -169,14 +167,11 @@ extension MapViewModel{
                 
             ) {[weak self] result in
                 guard let self = self else{
-                    print("lose object")
                     return
                 }
                 switch result{
                 case .completed(let response):
                     DispatchQueue.main.async{
-                        print("COUNT searchedRestaurants:\(self.searchedRestaurants.count)")
-                        print("COUNT nearbyRestaurants:\(self.nearbyRestaurants.count)")
                         withAnimation{
                             self.searchedRestaurants = response.results.shops
                             self.progress = 1.0
@@ -185,7 +180,6 @@ extension MapViewModel{
                 case .progress(let progress):
                     DispatchQueue.main.async{
                         self.progress = progress
-                        print("PROGRESS : \(self.progress)")
                     }
                 case .error(let error):
                     DispatchQueue.main.async{
