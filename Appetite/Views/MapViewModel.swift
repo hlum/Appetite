@@ -11,6 +11,8 @@ import SwiftUI
 import Combine
 
 final class MapViewModel:ObservableObject{
+    @Published var showDetailSheetView:Bool = false
+    
     @Published var showAlert:Bool = false
     @Published var alertMessage:String = ""
     
@@ -124,6 +126,15 @@ final class MapViewModel:ObservableObject{
         
     }
     
+}
+
+//MARK: View Functions
+extension MapViewModel{
+    func showRestaurant(restaurant:Shop){
+        withAnimation(.bouncy) {
+            selectedRestaurant = restaurant
+        }
+    }
 }
 //MARK: Filtering stuffs
 extension MapViewModel{

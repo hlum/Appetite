@@ -8,8 +8,10 @@
 import SwiftUI
 import SDWebImageSwiftUI
 import CoreLocation
+import MapKit
 
 final class RestaurantPreviewViewModel:ObservableObject{
+    @Published var lookAroundScence:MKLookAroundScene?
     @Published var distance:Double? = nil
     let locationManger = LocationManager()
     private var restaurant:Shop?
@@ -39,19 +41,38 @@ final class RestaurantPreviewViewModel:ObservableObject{
         
         self.distance = userLocation.distance(from: shopLocation)/1000
     }
+    
+    @MainActor
+    func fetchLookAroundScene()async{
+        guard let restaurant = self.restaurant else{return}
+        let coordinate = CLLocationCoordinate2D(
+            latitude: restaurant.lat,
+            longitude: restaurant.lon
+        )
+        let request = MKLookAroundSceneRequest(coordinate: coordinate)
+        lookAroundScence = try? await request.scene
+        
+    }
+
 
 }
 
 struct RestaurantPreviewView: View {
     @StateObject private var vm = RestaurantPreviewViewModel()
-    let restaurant:Shop
+    let selectedRestaurant:Shop
+    @Binding var showDetailSheetView:Bool
     var body: some View {
         HStack(alignment:.center,spacing: 0){
                 VStack(alignment:.leading,spacing: 16){
                     imageSection
+                    
                     titleSection
+                        .onTapGesture {
+                            showDetailSheetView = true
+                        }
+
                 }
-                
+            
                 VStack(spacing: 8) {
                     Button {
                         
@@ -63,7 +84,7 @@ struct RestaurantPreviewView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     Button {
-                        
+                        showDetailSheetView = true
                     } label: {
                         Text("詳細")
                             .font(.headline)
@@ -75,15 +96,33 @@ struct RestaurantPreviewView: View {
 
                 }
             }
+        .overlay(alignment: .topTrailing, content: {
+            
+            LookAroundPreview(scene: $vm.lookAroundScence)
+                .frame(width:80,height:80)
+                .cornerRadius(10)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(.systemWhite, lineWidth: 5) // Add border
+                )
+                .shadow(color:.systemWhite,radius:1,y:2)
+                .offset(y:-20)
+        })
             .onAppear{
-                vm.setRestaurant(restaurant)
+                vm.setRestaurant(selectedRestaurant)
+                Task{
+                    await vm.fetchLookAroundScene()
+                }
             }
             .padding(20)
             .foregroundStyle(.systemBlack)
             .background(
                 RoundedRectangle(cornerRadius: 10)
                     .fill(.systemWhite)
-                    .offset(y:65)
+                    .offset(y:85)
+                    .onTapGesture {
+                        showDetailSheetView = true
+                    }
             )
             .cornerRadius(30)
 
@@ -94,11 +133,11 @@ struct RestaurantPreviewView: View {
 extension RestaurantPreviewView{
     private var imageSection:some View{
         ZStack{
-            if let photoURLString = restaurant.logoImage,
+            if let photoURLString = selectedRestaurant.logoImage,
                let photoURL = URL(string:photoURLString){
                 WebImage(url: photoURL)
                     .placeholder(content: {
-                        restaurant.genre.image
+                        selectedRestaurant.genre.image
                             .resizable()
                             .scaledToFill()
                             .frame(width:100,height:100)
@@ -109,7 +148,7 @@ extension RestaurantPreviewView{
                     .frame(width:100,height:100)
                     .cornerRadius(10)
             }else{
-                restaurant.genre.image
+                selectedRestaurant.genre.image
                     .resizable()
                     .scaledToFill()
                     .frame(width:100,height:100)
@@ -122,33 +161,37 @@ extension RestaurantPreviewView{
     }
     
     private var titleSection:some View{
-
+        
         VStack(alignment: .leading){
-            Text(restaurant.name)
+            Text(selectedRestaurant.name)
                 .font(.title2)
                 .fontWeight(.bold)
                 .lineLimit(2)
             
             openTime
-        
-            Text("\(restaurant.genre.name)\n\(restaurant.subGenre?.name ?? "")")
+            
+            Text("\(selectedRestaurant.genre.name)\n\(selectedRestaurant.subGenre?.name ?? "")")
                 .font(.subheadline)
                 .bold()
             if let distance = vm.distance{
                 let distanceInString = String(format: "%.2f", distance).replacingOccurrences(of: "\\.0$", with: "", options: .regularExpression)
+                Text("半径距離")
+                    .font(.caption)
+                    .bold()
                 Text("\(distanceInString)km")
+                    .font(.caption2)
             }else{
                 ProgressView()
                     .progressViewStyle(.circular)
             }
         }
         .frame(maxWidth: .infinity,alignment: .leading)
-
+        
     }
     
     private var openTime:some View{
         ZStack{
-            if let openTime = restaurant.open,
+            if let openTime = selectedRestaurant.open,
                //全角文字　→ 半角に変換
                let normalizedOpenTime = openTime.applyingTransform(.fullwidthToHalfwidth, reverse: false){
                 // index of "(" in
@@ -159,14 +202,14 @@ extension RestaurantPreviewView{
                         .font(.subheadline)
                         .bold()
                 } else {
-                    Text("開店時間は不明です")
+                    Text("営業時間は不明です")
                         .font(.subheadline)
                 }
             }
         }
     }
 }
-
+    
 #Preview {
     let dummyShops = [
                 Shop(
@@ -178,12 +221,12 @@ extension RestaurantPreviewView{
                     genre: Genre(code: "1", name: "居酒屋"), subGenre: SubGenre(name: "ダイニングバー", code: "fadsf"),
                     access: "2 mins from Station",
                     urls: URLs(pc: "https://example.com"),
-                    photo: Photo(pc: PCPhoto(l: "large_url", m: "medium_url", s: "small_url")),
+                    photo: Photo(pc: PCPhoto(l: "large_url", m: "medium_url", s: "small_url"), mobile: MobilePhoto(l: "large", s: "small")), catchPharse: "fadf",
                     logoImage: "logoA.png",
                     nameKana: "レストラン A",
                     stationName: "Station A",
                     ktaiCoupon: 10,
-                    budget: Budget(code: "1", name: "Affordable", average: "ランチ：～999円、ディナー：3000円～4000円", budgetMemo: "Reasonable"),
+                    budget: Budget(code: "1", name: "Affordable", average: "ランチ：～999円、ディナー：3000円～4000円", budgetMemo: "Reasonable"), partyCapacity: .string("10"),
                     capacity: .integer(10),
                     wifi: "Available",
                     course: "Yes",
@@ -197,5 +240,5 @@ extension RestaurantPreviewView{
                     card: "Visa"
                 )
             ]
-    RestaurantPreviewView(restaurant: dummyShops[0])
+    RestaurantPreviewView(selectedRestaurant: dummyShops[0],showDetailSheetView: .constant(false))
 }
