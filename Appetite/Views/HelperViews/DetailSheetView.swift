@@ -17,9 +17,11 @@ struct DetailSheetView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     // Shop name and address
-                    Text(shop.catchPharse)
-                        .font(.title3)
-                        .bold()
+                    if !shop.catchPharse.isEmpty{
+                        Text(shop.catchPharse)
+                            .font(.title3)
+                            .bold()
+                    }
                     
                     
                     
