@@ -18,6 +18,10 @@ final class MapViewModel:ObservableObject{
     @Published var selectedRoute:MKRoute? = nil
     @Published var showRoutesSheet:Bool = false
     
+    //Updating Route
+    @Published var lastDirectionUpdateTime:Date?
+    private let minTimeBetweenRoutesUpdates:TimeInterval = 5.0
+    
     
     @Published var showDetailSheetView:Bool = false
     
@@ -143,46 +147,6 @@ extension MapViewModel{
     }
 }
 
-extension MapViewModel{
-    func getRountes(){
-        let request = MKDirections.Request()
-        guard let userLocation = self.userLocation else{
-            print("Can't get user Location For the route")
-            return
-        }
-        guard let selectedRestaurant = selectedRestaurant else{
-            print("NO selected Restaurant for destination")
-            return
-        }
-        let destinationCoordinate = CLLocationCoordinate2D(latitude: selectedRestaurant.lat, longitude: selectedRestaurant.lon)
-        
-        request.source = MKMapItem(placemark: MKPlacemark(coordinate: userLocation))
-        request.destination = MKMapItem(placemark: MKPlacemark(coordinate: destinationCoordinate))
-        request.transportType = transportType
-        request.requestsAlternateRoutes = true // Request multiple routes
-        
-        Task{
-            do{
-                let directions = MKDirections(request: request)
-                let response = try await directions.calculate()
-                withAnimation {
-                    DispatchQueue.main.async{
-                        self.availableRoutes = response.routes
-                        for route in self.availableRoutes{
-                            print(route.distance)
-                        }
-                    }
-                }
-            }catch{
-                DispatchQueue.main.async {
-                    self.availableRoutes = []
-                }
-                print("Error getting directions:\(error.localizedDescription)")
-            }
-        }
-    }
-}
-
 //MARK: Filtering stuffs
 extension MapViewModel{
     
@@ -301,3 +265,107 @@ extension MapViewModel{
     }
 }
 
+
+//MARK: Routes
+extension MapViewModel{
+    func getAvailableRoutes(){
+        let request = MKDirections.Request()
+        guard let userLocation = self.userLocation else{
+            print("Can't get user Location For the route")
+            return
+        }
+        guard let selectedRestaurant = selectedRestaurant else{
+            print("NO selected Restaurant for destination")
+            return
+        }
+        let destinationCoordinate = CLLocationCoordinate2D(latitude: selectedRestaurant.lat, longitude: selectedRestaurant.lon)
+        
+        request.source = MKMapItem(placemark: MKPlacemark(coordinate: userLocation))
+        request.destination = MKMapItem(placemark: MKPlacemark(coordinate: destinationCoordinate))
+        request.transportType = transportType
+        request.requestsAlternateRoutes = true // Request multiple routes
+        
+        Task{
+            do{
+                let directions = MKDirections(request: request)
+                let response = try await directions.calculate()
+                withAnimation {
+                    DispatchQueue.main.async{
+                        self.availableRoutes = response.routes
+                    }
+                }
+            }catch{
+                DispatchQueue.main.async {
+                    self.availableRoutes = []
+                }
+                print("Error getting directions:\(error.localizedDescription)")
+            }
+        }
+    }
+    
+    
+    func getRouteUpdate(){
+        let request = MKDirections.Request()
+        guard let userLocation = self.userLocation else{
+            print("Can't get user Location For the route")
+            return
+        }
+        guard let selectedRestaurant = selectedRestaurant else{
+            print("NO selected Restaurant for destination")
+            return
+        }
+        let destinationCoordinate = CLLocationCoordinate2D(latitude: selectedRestaurant.lat, longitude: selectedRestaurant.lon)
+        
+        request.source = MKMapItem(placemark: MKPlacemark(coordinate: userLocation))
+        request.destination = MKMapItem(placemark: MKPlacemark(coordinate: destinationCoordinate))
+        request.transportType = transportType
+        request.requestsAlternateRoutes = true // Request multiple routes
+        
+        Task{
+            do{
+                let directions = MKDirections(request: request)
+                let response = try await directions.calculate()
+                withAnimation {
+                    DispatchQueue.main.async{
+                        self.selectedRoute = response.routes.first
+                    }
+                }
+            }catch{
+                DispatchQueue.main.async {
+                    self.availableRoutes = []
+                }
+                print("Error getting directions:\(error.localizedDescription)")
+            }
+        }
+    }
+    
+    //UserLocationが更新され、ある時間経ったらルートを更新する
+    func updateRoute(){
+        NotificationCenter.default
+            .addObserver(
+                forName: Notification.Name("UserLocationUpdated"),
+                object: nil,
+                queue: .main) {[weak self] _ in
+                    if self?.selectedRoute != nil{//案内中
+                        self?.checkAndUpdateRoute()
+                    }
+                }
+    }
+    
+    //指定した時間たったかチェックして　ルートを更新する
+    private func checkAndUpdateRoute(){
+        guard let lastDirectionUpdateTime = lastDirectionUpdateTime else{
+            //first Update
+            self.lastDirectionUpdateTime = Date()
+            return
+        }
+        
+        let timeSinceLastUpdate = Date().timeIntervalSince(lastDirectionUpdateTime)
+        
+        if timeSinceLastUpdate > minTimeBetweenRoutesUpdates{
+            getRouteUpdate()
+            self.lastDirectionUpdateTime = Date()
+        }
+    }
+    
+}

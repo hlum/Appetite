@@ -43,7 +43,7 @@ struct MapView: View {
                     isPresented: $vm.showRoutesSheet,
                     content: {
                         RoutesSheetView(
-                            getRoutes: vm.getRountes,
+                            getRoutes: vm.getAvailableRoutes,
                             availableRoutes: $vm.availableRoutes,
                             selectedRoute: $vm.selectedRoute,
                             transportType: $vm.transportType
@@ -143,6 +143,7 @@ struct MapView: View {
                 if let userLocation = vm.userLocation{
                     vm.moveCamera(to:userLocation)
                 }
+                vm.updateRoute()
             }
         }
     }

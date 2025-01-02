@@ -48,6 +48,7 @@ final class LocationManager:NSObject,CLLocationManagerDelegate{
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let newLocation = locations.last else { return }
+        NotificationCenter.default.post(name: Notification.Name("UserLocationUpdated"), object: nil) // ユーザーの一致が変わったらルートを更新するため
         onLocationUpdate?(.success(newLocation.coordinate))
     }
     
