@@ -13,7 +13,7 @@ import Combine
 final class MapViewModel:ObservableObject{
     
     //ROUTES STUFFS
-    @Published var transportType:MKDirectionsTransportType = .transit
+    @Published var transportType:MKDirectionsTransportType = .automobile
     @Published var availableRoutes:[MKRoute] = []
     @Published var selectedRoute:MKRoute? = nil
     @Published var showRoutesSheet:Bool = false
@@ -144,24 +144,39 @@ extension MapViewModel{
 }
 
 extension MapViewModel{
-    func getRountes(to destination:CLLocationCoordinate2D){
+    func getRountes(){
         let request = MKDirections.Request()
         guard let userLocation = self.userLocation else{
             print("Can't get user Location For the route")
             return
         }
+        guard let selectedRestaurant = selectedRestaurant else{
+            print("NO selected Restaurant for destination")
+            return
+        }
+        let destinationCoordinate = CLLocationCoordinate2D(latitude: selectedRestaurant.lat, longitude: selectedRestaurant.lon)
+        
         request.source = MKMapItem(placemark: MKPlacemark(coordinate: userLocation))
-        request.destination = MKMapItem(placemark: MKPlacemark(coordinate: destination))
+        request.destination = MKMapItem(placemark: MKPlacemark(coordinate: destinationCoordinate))
         request.transportType = transportType
+        request.requestsAlternateRoutes = true // Request multiple routes
         
         Task{
             do{
                 let directions = MKDirections(request: request)
                 let response = try await directions.calculate()
                 withAnimation {
-                    availableRoutes = response.routes
+                    DispatchQueue.main.async{
+                        self.availableRoutes = response.routes
+                        for route in self.availableRoutes{
+                            print(route.distance)
+                        }
+                    }
                 }
             }catch{
+                DispatchQueue.main.async {
+                    self.availableRoutes = []
+                }
                 print("Error getting directions:\(error.localizedDescription)")
             }
         }

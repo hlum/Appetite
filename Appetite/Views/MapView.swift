@@ -21,94 +21,127 @@ struct MapView: View {
     @StateObject var vm:MapViewModel = MapViewModel(filterManager:nil)
     
     var body: some View {
-        ZStack{
-            Map(position:$vm.cameraPosition){
-                UserAnnotation(anchor: .center)
-                ForEach(vm.showSearchedRestaurants ? vm.searchedRestaurants : vm.nearbyRestaurants) { restaurant in
-                    restaurantAnnotations(restaurant: restaurant)
+        if vm.selectedRoute == nil{//案内中は別のView
+            ZStack{
+                Map(position:$vm.cameraPosition){
+                    UserAnnotation(anchor: .center)
+                    ForEach(vm.showSearchedRestaurants ? vm.searchedRestaurants : vm.nearbyRestaurants) { restaurant in
+                        restaurantAnnotations(restaurant: restaurant)
+                    }
                 }
-            }
-            .brightness(vm.progress < 1.0 ? -0.3 : 0.0)
-//            .brightness(-0.3)
-            .onMapCameraChange(frequency: .onEnd, { context in
-                withAnimation(.bouncy) {
-                    cameraPositionChanged = true
-                }
-                vm.currentSeeingRegionSpan = context.region.span
-                vm.currentSeeingRegionCenterCoordinate = context.camera.centerCoordinate//get the coordinate of the region dragged by user
-            })
-            .mapStyle(mapStyle == .hybrid ? .hybrid : .standard)
-            .sheet(isPresented: $vm.showRoutesSheet, content: {
-                Text("routes")
-            })
-            .sheet(
-                isPresented: $vm.showNearbyRestaurantSheet,
-                content: {
-                    NearbyRestaurantSheetView(
-                        nearbyRestaurants: vm.showSearchedRestaurants ? $vm.searchedRestaurants : $vm.nearbyRestaurants,
-                        cameraPosition: $vm.currentSeeingRegionCenterCoordinate,
-                        selectedRestaurant:$vm.selectedRestaurant
-                    )
-                    .presentationBackgroundInteraction(.enabled)
-                    .interactiveDismissDisabled()
-                    .presentationCornerRadius(20)
-                    .presentationDetents([.height(150),.medium,.large])
-                    .background(.systemWhite)
+                .brightness(vm.progress < 1.0 ? -0.3 : 0.0)
+    //            .brightness(-0.3)
+                .onMapCameraChange(frequency: .onEnd, { context in
+                    withAnimation(.bouncy) {
+                        cameraPositionChanged = true
+                    }
+                    vm.currentSeeingRegionSpan = context.region.span
+                    vm.currentSeeingRegionCenterCoordinate = context.camera.centerCoordinate//get the coordinate of the region dragged by user
                 })
-            .sheet(isPresented: $vm.showFilterSheet, content: {
-                FilterSheetView()
-                    .environmentObject(filterManager)
-                    .presentationDetents([.medium,.large])
-            })
-            .sheet(isPresented: $vm.showDetailSheetView, content: {
-                if let selectedRestaurant = vm.selectedRestaurant{
-                    DetailSheetView(shop:selectedRestaurant,showRoutesSheet: $vm.showRoutesSheet)
-                }
-            })
-            .overlay(alignment: .bottomTrailing, content: {
-                ToolBar
-                    .padding(.bottom,150)
-            })
+                .mapStyle(mapStyle == .hybrid ? .hybrid : .standard)
+                .sheet(
+                    isPresented: $vm.showRoutesSheet,
+                    content: {
+                        RoutesSheetView(
+                            getRoutes: vm.getRountes,
+                            availableRoutes: $vm.availableRoutes,
+                            selectedRoute: $vm.selectedRoute,
+                            transportType: $vm.transportType
+                        )
+                        .presentationDetents([.medium])
+                        .presentationBackgroundInteraction(.disabled)
+                        .presentationDragIndicator(.visible)
+                })
+                .sheet(
+                    isPresented: $vm.showNearbyRestaurantSheet,
+                    content: {
+                        NearbyRestaurantSheetView(
+                            nearbyRestaurants: vm.showSearchedRestaurants ? $vm.searchedRestaurants : $vm.nearbyRestaurants,
+                            cameraPosition: $vm.currentSeeingRegionCenterCoordinate,
+                            selectedRestaurant:$vm.selectedRestaurant
+                        )
+                        .presentationBackgroundInteraction(.enabled)
+                        .interactiveDismissDisabled()
+                        .presentationCornerRadius(20)
+                        .presentationDetents([.height(150),.medium,.large])
+                        .background(.systemWhite)
+                    })
+                .sheet(isPresented: $vm.showFilterSheet, content: {
+                    FilterSheetView()
+                        .environmentObject(filterManager)
+                        .presentationDetents([.medium,.large])
+                })
+                .sheet(isPresented: $vm.showDetailSheetView, content: {
+                    if let selectedRestaurant = vm.selectedRestaurant{
+                        DetailSheetView(shop:selectedRestaurant,showRoutesSheet: $vm.showRoutesSheet)
+                    }
+                })
+                .overlay(alignment: .bottomTrailing, content: {
+                    ToolBar
+                        .padding(.bottom,150)
+                })
 
-            .overlay(alignment: .top) {
-                VStack{
-                    searchBarAndFilters
-                    if cameraPositionChanged{
-                        searchThisAreaButton
+                .overlay(alignment: .top) {
+                    VStack{
+                        searchBarAndFilters
+                        if cameraPositionChanged{
+                            searchThisAreaButton
+                        }
+                    }
+                }
+                .alert("エラ", isPresented: $vm.showAlert, actions: {
+                    
+                }, message: {
+                    Text(vm.alertMessage)
+                })
+                .alert(isPresented: $vm.showLocationPermissionAlert) {
+                    LocationPermissionAlert()
+                }
+                .onAppear{
+                    vm.getUserLocationAndNearbyRestaurants()
+                    vm.setUp(filterManager)
+                }
+                .onChange(of: vm.selectedRestaurant) { _, newValue in
+                    vm.showNearbyRestaurantSheet = newValue == nil && !vm.showFilterSheet
+                    if let lon = newValue?.lon,
+                       let lat = newValue?.lat{
+                        vm.moveCamera(to: CLLocationCoordinate2D(latitude: lat, longitude:lon))
+                    }
+                }
+                .onChange(of:vm.showFilterSheet) { _, newValue in
+                    vm.showNearbyRestaurantSheet = !newValue && vm.selectedRestaurant == nil
+                }
+                .onChange(of: filterManager.filterChangedFlag) { _, _ in
+                    handleFilterChanges()
+                }
+                
+                previewsStack
+
+                if vm.progress < 1.0{
+                    VStack{
+                        LottieView(name: "LoadingAnimation", loopMode: .loop)
+                            .frame(height:400)
                     }
                 }
             }
-            .alert("エラ", isPresented: $vm.showAlert, actions: {
-                
-            }, message: {
-                Text(vm.alertMessage)
-            })
-            .alert(isPresented: $vm.showLocationPermissionAlert) {
-                LocationPermissionAlert()
-            }
-            .onAppear{
-                vm.getUserLocationAndNearbyRestaurants()
-                vm.setUp(filterManager)
-            }
-            .onChange(of: vm.selectedRestaurant) { _, newValue in
-                vm.showNearbyRestaurantSheet = newValue == nil && !vm.showFilterSheet
-                if let lon = newValue?.lon,
-                   let lat = newValue?.lat{
-                    vm.moveCamera(to: CLLocationCoordinate2D(latitude: lat, longitude:lon))
+        }else{
+            Map(position: $vm.cameraPosition){
+                UserAnnotation(anchor: .center)
+                if let selectedRestaurant = vm.selectedRestaurant{
+                    restaurantAnnotations(restaurant: selectedRestaurant)
+                }
+                if let route = vm.selectedRoute{
+                    MapPolyline(route.polyline)
+                        .stroke(Color.blue, lineWidth: 4)
                 }
             }
-            .onChange(of:vm.showFilterSheet) { _, newValue in
-                vm.showNearbyRestaurantSheet = !newValue && vm.selectedRestaurant == nil
-            }
-            .onChange(of: filterManager.filterChangedFlag) { _, _ in
-                handleFilterChanges()
-            }
-            previewsStack
-
-            if vm.progress < 1.0{
-                VStack{
-                    LottieView(name: "LoadingAnimation", loopMode: .loop)
-                        .frame(height:400)
+            .overlay(alignment: .bottomTrailing, content: {
+                ToolBar
+            })
+            .mapStyle(mapStyle == .hybrid ? .hybrid : .standard)
+            .onAppear{
+                if let userLocation = vm.userLocation{
+                    vm.moveCamera(to:userLocation)
                 }
             }
         }
@@ -364,8 +397,8 @@ extension MapView{
             annotationContentView(restaurant: restaurant)
                 .onTapGesture {
                     withAnimation(.bouncy) {
-                        //すでに選択されているなら外す
-                        if vm.selectedRestaurant == restaurant{
+                        //すでに選択されているなら外す //ルート案内中は外せない
+                        if vm.selectedRestaurant == restaurant && vm.selectedRoute == nil{
                             vm.selectedRestaurant = nil
                         }else{
                             vm.selectedRestaurant = restaurant

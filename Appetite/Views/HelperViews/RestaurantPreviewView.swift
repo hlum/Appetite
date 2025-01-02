@@ -63,7 +63,7 @@ struct RestaurantPreviewView: View {
     @Binding var showDetailSheetView:Bool
     @Binding var showRoutesSheet:Bool
     var body: some View {
-        HStack(alignment:.center,spacing: 0){
+        HStack(alignment:.bottom,spacing: 0){
                 VStack(alignment:.leading,spacing: 16){
                     imageSection
                     
