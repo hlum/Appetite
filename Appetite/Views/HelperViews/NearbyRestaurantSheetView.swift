@@ -29,14 +29,11 @@ struct NearbyRestaurantSheetView: View {
                 Section{
                     LazyVStack(alignment:.leading){
                         if !restaurantsShowing.isEmpty{
-                            ForEach(restaurantsShowing) { shop in
-                                Button {
-                                    selectedRestaurant = shop
-                                } label: {
+                            ForEach(restaurantsShowing,id:\.id) { shop in
                                     listItemView(for: shop)
-
-                                }
-                                
+                                    .onTapGesture {
+                                        selectedRestaurant = shop
+                                    }
                             }
                         }else{
                             ContentUnavailableView("検索結果に一致するものはありません。", systemImage: "magnifyingglass")

@@ -21,10 +21,8 @@ final class MapViewModel:ObservableObject{
     //Updating Route
     @Published var lastDirectionUpdateTime:Date?
     private let minTimeBetweenRoutesUpdates:TimeInterval = 5.0
-    
-    
+        
     @Published var showDetailSheetView:Bool = false
-    
     @Published var showAlert:Bool = false
     @Published var alertMessage:String = ""
     
@@ -61,7 +59,7 @@ final class MapViewModel:ObservableObject{
             self.addSubscriberToSearchText()  //検索バーを検知する
         }
     }
-    
+
     deinit{
         locationManager.onLocationUpdate = nil
         cancellables.removeAll()
