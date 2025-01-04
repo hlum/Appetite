@@ -10,8 +10,9 @@ import SwiftUI
 import SDWebImageSwiftUI
 
 struct DetailSheetView: View {
+    @Environment(\.dismiss) var dismiss
     let shop: Shop
-    
+    @Binding var showRoutesSheet:Bool
     var body: some View {
         NavigationStack{
             ScrollView {
@@ -97,6 +98,8 @@ struct DetailSheetView: View {
             .overlay(alignment: .bottom) {
                 Button {
                     // Action for directions button
+                    dismiss.callAsFunction()
+                    showRoutesSheet = true
                 } label: {
                     Text("経路")
                         .font(.headline)
@@ -194,6 +197,6 @@ struct DetailSheetView: View {
         )
     ]
     NavigationStack{
-        DetailSheetView(shop: dummyShops[0])
+        DetailSheetView(shop: dummyShops[0], showRoutesSheet: .constant(false))
     }
 }

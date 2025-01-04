@@ -61,8 +61,9 @@ struct RestaurantPreviewView: View {
     @StateObject private var vm = RestaurantPreviewViewModel()
     let selectedRestaurant:Shop
     @Binding var showDetailSheetView:Bool
+    @Binding var showRoutesSheet:Bool
     var body: some View {
-        HStack(alignment:.center,spacing: 0){
+        HStack(alignment:.bottom,spacing: 0){
                 VStack(alignment:.leading,spacing: 16){
                     imageSection
                     
@@ -75,7 +76,7 @@ struct RestaurantPreviewView: View {
             
                 VStack(spacing: 8) {
                     Button {
-                        
+                        showRoutesSheet = true
                     } label: {
                         Text("経路")
                             .font(.headline)
@@ -240,5 +241,13 @@ extension RestaurantPreviewView{
                     card: "Visa"
                 )
             ]
-    RestaurantPreviewView(selectedRestaurant: dummyShops[0],showDetailSheetView: .constant(false))
+    RestaurantPreviewView(
+        selectedRestaurant: dummyShops[0],
+        showDetailSheetView: .constant(
+            false
+        ),
+        showRoutesSheet: .constant(
+            false
+        )
+    )
 }

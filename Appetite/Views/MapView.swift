@@ -22,6 +22,49 @@ struct MapView: View {
     
     var body: some View {
         ZStack{
+            if vm.selectedRoute == nil{//案内中は別のView
+                   normalStateMapView
+                    .transition(.fade)
+            }else{
+                    tripStateMapView
+                    .transition(.fade)
+            }
+        }
+        .overlay(alignment: .bottom) {
+            if let _ = vm.selectedRoute{
+                
+                HStack{
+                    tripDetailView
+                    
+                    Spacer()
+                    cancelDestinationButton
+                }
+                .transition(
+                    .asymmetric(
+                        insertion: .move(edge: .bottom),
+                        removal: .move(edge: .bottom)
+                    )
+                )
+                
+                .frame(maxWidth: .infinity,alignment: .leading)
+                .background(.ultraThinMaterial)
+                .cornerRadius(20)
+                .padding()
+                .shadow(radius: 10)
+                //for the transition to work
+                .frame(maxHeight: .infinity,alignment:.bottom)
+                
+            }
+            
+            
+        }
+    }
+}
+
+//MARK: Main Components
+extension MapView{
+    private var normalStateMapView:some View{
+        ZStack{
             Map(position:$vm.cameraPosition){
                 UserAnnotation(anchor: .center)
                 ForEach(vm.showSearchedRestaurants ? vm.searchedRestaurants : vm.nearbyRestaurants) { restaurant in
@@ -29,7 +72,7 @@ struct MapView: View {
                 }
             }
             .brightness(vm.progress < 1.0 ? -0.3 : 0.0)
-//            .brightness(-0.3)
+    //            .brightness(-0.3)
             .onMapCameraChange(frequency: .onEnd, { context in
                 withAnimation(.bouncy) {
                     cameraPositionChanged = true
@@ -37,7 +80,21 @@ struct MapView: View {
                 vm.currentSeeingRegionSpan = context.region.span
                 vm.currentSeeingRegionCenterCoordinate = context.camera.centerCoordinate//get the coordinate of the region dragged by user
             })
-            .mapStyle(mapStyle == .hybrid ? .hybrid : .standard)
+            .mapStyle(mapStyle == .hybrid ? .hybrid(elevation:.realistic) : .standard(elevation:.realistic))
+            .sheet(
+                isPresented: $vm.showRoutesSheet,
+                content: {
+                    RoutesSheetView(
+                        getRoutes: vm.getAvailableRoutes,
+                        selectedRestaurant: $vm.selectedRestaurant,
+                        availableRoutes: $vm.availableRoutes,
+                        selectedRoute: $vm.selectedRoute,
+                        transportType: $vm.transportType
+                    )
+                    .presentationDetents([.medium])
+                    .presentationBackgroundInteraction(.disabled)
+                    .presentationDragIndicator(.visible)
+            })
             .sheet(
                 isPresented: $vm.showNearbyRestaurantSheet,
                 content: {
@@ -59,7 +116,7 @@ struct MapView: View {
             })
             .sheet(isPresented: $vm.showDetailSheetView, content: {
                 if let selectedRestaurant = vm.selectedRestaurant{
-                    DetailSheetView(shop:selectedRestaurant)
+                    DetailSheetView(shop:selectedRestaurant,showRoutesSheet: $vm.showRoutesSheet)
                 }
             })
             .overlay(alignment: .bottomTrailing, content: {
@@ -84,6 +141,9 @@ struct MapView: View {
                 LocationPermissionAlert()
             }
             .onAppear{
+                if let userLocation = vm.userLocation{
+                    vm.moveCamera(to:userLocation)
+                }
                 vm.getUserLocationAndNearbyRestaurants()
                 vm.setUp(filterManager)
             }
@@ -100,6 +160,7 @@ struct MapView: View {
             .onChange(of: filterManager.filterChangedFlag) { _, _ in
                 handleFilterChanges()
             }
+            
             previewsStack
 
             if vm.progress < 1.0{
@@ -110,7 +171,34 @@ struct MapView: View {
             }
         }
     }
+    
+    private var tripStateMapView:some View{
+        ZStack{
+            Map(position: $vm.cameraPosition){
+                UserAnnotation(anchor: .center)
+                if let selectedRestaurant = vm.selectedRestaurant{
+                    restaurantAnnotations(restaurant: selectedRestaurant)
+                }
+                if let route = vm.selectedRoute{
+                    MapPolyline(route.polyline)
+                        .stroke(Color.blue, lineWidth: 4)
+                }
+            }
+            .transition(.fade)
+            .overlay(alignment: .topLeading, content: {
+                ToolBar
+            })
+            .mapStyle(mapStyle == .hybrid ? .hybrid(elevation:.realistic,showsTraffic: true) : .standard(elevation:.realistic,showsTraffic: true))
+            .onAppear{
+                if let userLocation = vm.userLocation{
+                    vm.moveCamera(to:userLocation)
+                }
+                vm.updateRoute()
+            }
+        }
+    }
 }
+
 // MARK: UIComponents
 extension MapView{
     private var searchThisAreaButton:some View{
@@ -159,7 +247,8 @@ extension MapView{
                     if restaurant == selectedRestaurant {
                         RestaurantPreviewView(
                             selectedRestaurant: selectedRestaurant,
-                            showDetailSheetView: $vm.showDetailSheetView
+                            showDetailSheetView: $vm.showDetailSheetView,
+                            showRoutesSheet: $vm.showRoutesSheet
                         )
                         .shadow(color: Color.black.opacity(0.6), radius: 20)
                         .padding()
@@ -360,8 +449,8 @@ extension MapView{
             annotationContentView(restaurant: restaurant)
                 .onTapGesture {
                     withAnimation(.bouncy) {
-                        //すでに選択されているなら外す
-                        if vm.selectedRestaurant == restaurant{
+                        //すでに選択されているなら外す //ルート案内中は外せない
+                        if vm.selectedRestaurant == restaurant && vm.selectedRoute == nil{
                             vm.selectedRestaurant = nil
                         }else{
                             vm.selectedRestaurant = restaurant
@@ -513,6 +602,81 @@ extension MapView{
         
         let nextRestaurant = currentShowingRestaurants[nextIndex]
         vm.showRestaurant(restaurant: nextRestaurant)
+    }
+}
+
+
+//MARK: ROUTE
+extension MapView{
+    private var tripDetailView:some View{
+        VStack(alignment:.leading,spacing: 0){
+            if let route = vm.selectedRoute{
+                Group{
+                    
+                    var formattedDistance:String{
+                        if route.distance < 1000{
+                            //m
+                            return "\(Int(route.distance))m"
+                        }else{
+                            //km
+                            return String(format: "%.2fkm", Double(route.distance) / 1000)
+                        }
+                    }
+                    Text(
+                        "\(formatTimeInterval(route.expectedTravelTime))  (\(formattedDistance))"
+                    )
+                    .font(.title2)
+                    .bold()
+                    .padding(.top)
+                    
+                        let travelTime = route.expectedTravelTime
+                        let calendar = Calendar.current
+                        let minutes = Int(travelTime / 60) // If `travelTime` is in seconds
+                        let date = calendar.date(byAdding: .minute, value: minutes, to: Date())
+                        let formattedDate = date?.formatted(
+                            Date.FormatStyle()
+                                .hour(.twoDigits(amPM: .abbreviated))
+                                .minute(.twoDigits)
+                        )
+                        
+                        Text("到着：\(formattedDate ?? "到着時刻不明")")
+                        
+                        Text(route.steps.first?.instructions ?? "")
+                            .multilineTextAlignment(.leading)
+                            .font(.system(size: 25,weight: .light))
+                            .padding(.bottom)
+                    
+                    
+                }
+                .padding(.leading)
+            }
+        }
+        
+    }
+    
+    private var cancelDestinationButton:some View{
+        Button {
+            withAnimation(.bouncy){
+                vm.selectedRoute = nil
+            }
+        } label: {
+            Image(systemName:"xmark.app")
+                .font(.system(size: 30))
+                .padding()
+                .background(.red)
+                .foregroundColor(.white)
+                .cornerRadius(20)
+                .shadow(radius: 10)
+                .padding(.trailing)
+        }
+    }
+
+    
+    func formatTimeInterval(_ timeInterval: TimeInterval) -> String {
+        let formatter = DateComponentsFormatter()
+        formatter.allowedUnits = [.hour, .minute]
+        formatter.unitsStyle = .short
+        return formatter.string(from: timeInterval) ?? "N/A"
     }
 }
 
