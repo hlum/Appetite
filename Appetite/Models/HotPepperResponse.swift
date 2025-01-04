@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUICore
 
 struct HotPepperResponse: Codable {
     let results: Results
@@ -13,9 +14,9 @@ struct HotPepperResponse: Codable {
 
 struct Results: Codable {
     let apiVersion: String
-    let resultsAvailable: Int
-    let resultsReturned: String
-    let resultsStart: Int
+    let resultsAvailable: Int?
+    let resultsReturned: String?
+    let resultsStart: Int?
     let shops: [Shop]
     
     enum CodingKeys: String, CodingKey {
@@ -27,23 +28,30 @@ struct Results: Codable {
     }
 }
 
-struct Shop: Codable {
+struct Shop: Codable,Identifiable,Equatable {
+    static func == (lhs: Shop, rhs: Shop) -> Bool {
+        lhs.id == rhs.id
+    }
+    
     let id: String
     let name: String
     let address: String
     let lat: Double
     let lon: Double
     let genre: Genre
+    let subGenre:SubGenre?
     let access: String
     let urls: URLs
     let photo: Photo
+    let catchPharse:String
     
     let logoImage: String?
     let nameKana: String?
     let stationName: String?
     let ktaiCoupon: Int?
     let budget: Budget?
-    let capacity: Int?
+    let partyCapacity:PartyCapacity?
+    let capacity: Capacity?
     let wifi: String?
     let course: String?
     let freeDrink: String?
@@ -58,6 +66,7 @@ struct Shop: Codable {
     enum CodingKeys: String, CodingKey {
         case id, name, address, lat, genre, access, urls, photo
         case lon = "lng"
+        case partyCapacity = "party_capacity"
         case logoImage = "logo_image"
         case nameKana = "name_kana"
         case stationName = "station_name"
@@ -69,13 +78,138 @@ struct Shop: Codable {
         case open, close, parking
         case nonSmoking = "non_smoking"
         case card
+        case subGenre = "sub_genre"
+        case catchPharse = "catch"
     }
 }
 
+enum PartyCapacity:Codable{
+    case integer(Int)
+    case string(String)
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let intValue = try? container.decode(Int.self) {
+            self = .integer(intValue)
+        } else if let stringValue = try? container.decode(String.self) {
+            self = .string(stringValue)
+        } else {
+            throw DecodingError.typeMismatch(Capacity.self, DecodingError.Context(
+                codingPath: decoder.codingPath,
+                debugDescription: "Expected Int or String for partyCapacity"
+            ))
+        }
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .integer(let intValue):
+            try container.encode(intValue)
+        case .string(let stringValue):
+            try container.encode(stringValue)
+        }
+    }
+    
+    // Computed property for a readable string
+    var displayValue: String {
+        switch self {
+        case .integer(let intValue):
+            return "\(intValue)"
+        case .string(let stringValue):
+            return stringValue
+        }
+    }
+}
+
+enum Capacity: Codable {
+    case integer(Int)
+    case string(String)
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let intValue = try? container.decode(Int.self) {
+            self = .integer(intValue)
+        } else if let stringValue = try? container.decode(String.self) {
+            self = .string(stringValue)
+        } else {
+            throw DecodingError.typeMismatch(Capacity.self, DecodingError.Context(
+                codingPath: decoder.codingPath,
+                debugDescription: "Expected Int or String for capacity"
+            ))
+        }
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .integer(let intValue):
+            try container.encode(intValue)
+        case .string(let stringValue):
+            try container.encode(stringValue)
+        }
+    }
+    
+    // Computed property for a readable string
+    var displayValue: String {
+        switch self {
+        case .integer(let intValue):
+            return "\(intValue)"
+        case .string(let stringValue):
+            return stringValue
+        }
+    }
+}
+
+struct SubGenre:Codable{
+    let name:String
+    let code:String
+}
 struct Genre: Codable {
     let code: String
     let name: String
+    var image: Image {
+        switch code {
+//        case "G001":
+//            return "izakaya"
+//        case "G002":
+//            return "dining_bar"
+//        case "G003":
+//            return "creative_cuisine"
+//        case "G004":
+//            return "japanese_food"
+//        case "G005":
+//            return "western_food"
+//        case "G006":
+//            return "italian_french"
+//        case "G007":
+//            return "chinese_food"
+//        case "G008":
+//            return "yakiniku"
+//        case "G017":
+//            return "korean_food"
+//        case "G009":
+//            return "asian_ethnic_food"
+//        case "G010":
+//            return "international_cuisine"
+//        case "G011":
+//            return "karaoke_party"
+//        case "G012":
+//            return "bar_cocktail"
+//        case "G013":
+//            return "ramen"
+//        case "G016":
+//            return "okonomiyaki_manjya"
+//        case "G014":
+//            return "cafe_sweets"
+//        case "G015":
+//            return "other_gourmet"
+        default:
+            Image(systemName: "fork.knife.circle")
+        }
+    }
 }
+
 
 struct Budget: Codable {
     let code: String
@@ -95,8 +229,13 @@ struct URLs: Codable {
 
 struct Photo: Codable {
     let pc: PCPhoto
+    let mobile:MobilePhoto
 }
 
+struct MobilePhoto:Codable{
+    let l:String
+    let s:String
+}
 struct PCPhoto: Codable {
     let l: String
     let m: String
