@@ -51,7 +51,7 @@ final class MapViewModel:ObservableObject{
     @Published var showSearchedRestaurants: Bool = false
     
     init(filterManager:FilterManger?){
-        self.apiClient = HotPepperAPIClient(apiKey: APIKEY.key.rawValue)
+        self.apiClient = HotPepperAPIClient(apiKey: APIKEY.hotpepperApiKey.rawValue)
         self.filterManager = filterManager
         getUserLocationAndNearbyRestaurants()
         //NearbyRestaurantsを待つ
