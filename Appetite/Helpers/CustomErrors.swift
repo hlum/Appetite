@@ -6,35 +6,32 @@
 //
 
 import Foundation
-
-enum CustomErrors: Error {
+enum CustomErrors: Error, LocalizedError {
     
-//    HotPepperAPIError
+    // エラーケースを定義
     case NoDataFound
     case InvalidURL
-    //LocationManager Errors
     case LocationPermissionDenied
 
-    var localizedDescription: String? {
+    // エラーのローカライズされた説明を提供
+    var errorDescription: String? {
         switch self {
         case .NoDataFound:
             return NSLocalizedString(
-                "No data was found.",
-                comment: "No data found error"
+                "データが見つかりませんでした。",
+                comment: "データが見つからないエラー"
             )
         case .InvalidURL:
             return NSLocalizedString(
-                "The URL is invalid.",
-                comment: "Invalid URL error"
+                "URLが無効です。",
+                comment: "無効なURLエラー"
             )
         case .LocationPermissionDenied:
             return NSLocalizedString(
-                "Location access permission was denied.",
-                comment: "Location permission denied error"
+                "位置情報へのアクセス許可が拒否されました。",
+                comment: "位置情報許可が拒否されたエラー"
             )
         }
     }
-    
 }
-
 

@@ -69,12 +69,24 @@ final class MapViewModel:ObservableObject{
         self.filterManager = filterManager
     }
       
-    @MainActor
+    
+    private func checkForCustomError(error:Error){
+        if let customError = error as? CustomErrors{
+            self.showLocationPermissionAlert = true
+            self.showAlert(for: customError.localizedDescription)
+        }else{
+            self.showAlert(for: error.localizedDescription)
+        }
+    }
+    
     private func showAlert(for message:String){
-#warning("Custom error bug を　直して！！")
-        guard !(message.contains("Appetite.CustomErrors error 0") || message.contains("The operation")) else{return}
-        showAlert = true
-        alertMessage = message
+        DispatchQueue.main.async {
+            if !self.showAlert{
+                self.showAlert = true
+                self.alertMessage = message
+            }
+            print("Alert state: \(self.showAlert)")
+        }
     }
     
     func getUserLocationAndNearbyRestaurants(){
@@ -88,9 +100,7 @@ final class MapViewModel:ObservableObject{
                     fetchedFirstTime = true
                 }
             case .failure(let error):
-                Task{
-                    await self.showAlert(for: error.localizedDescription)
-                }
+                checkForCustomError(error: error)
                 print(error.localizedDescription)
             }
         }
@@ -112,8 +122,8 @@ final class MapViewModel:ObservableObject{
                     DispatchQueue.main.async{
                         self?.nearbyRestaurants = []
                         self?.progress = 1.0
-                        self?.showAlert(for: error.localizedDescription)
                     }
+                    self?.checkForCustomError(error: error)
                     print(error.localizedDescription)
                 }
             }
@@ -196,8 +206,7 @@ extension MapViewModel{
                     DispatchQueue.main.async{
                         self.searchedRestaurants = []
                         self.progress = 1.0
-                        print(error.localizedDescription)
-                        self.showAlert(for: error.localizedDescription)
+                        self.checkForCustomError(error: error)
                     }
                 }
                 

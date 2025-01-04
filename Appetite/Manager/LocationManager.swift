@@ -53,7 +53,11 @@ final class LocationManager:NSObject,CLLocationManagerDelegate{
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        onLocationUpdate?(.failure(error))
+        if let clError = error as? CLError{
+            if clError.code == .denied{
+                onLocationUpdate?(.failure(CustomErrors.LocationPermissionDenied))
+            }
+        }
     }
 
 }

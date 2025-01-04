@@ -72,7 +72,14 @@ class HotPepperAPIClient: ObservableObject {
                 var totalResults = initialResponse.results.resultsAvailable ?? 0
                 
                 if totalResults == 0{
-                    completion(.error(CustomErrors.NoDataFound))
+                    let noResultResponse = HotPepperResponse(results: Results(
+                        apiVersion: "1.26",
+                        resultsAvailable: 0,
+                        resultsReturned: "0",
+                        resultsStart: 1,
+                        shops: []
+                    ))
+                    completion(.completed(noResultResponse))
                 }
                 // If maxResults is less than available results, use that instead
                 totalResults = min(totalResults, maxResults)
@@ -220,7 +227,6 @@ class HotPepperAPIClient: ObservableObject {
         urlComponents.queryItems = queryItems
         
         guard let url = urlComponents.url else {
-            completion(.error(CustomErrors.InvalidURL))
             return
         }
         

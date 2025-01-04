@@ -29,6 +29,14 @@ struct MapView: View {
                     tripStateMapView
                     .transition(.fade)
             }
+            
+            if vm.showAlert{
+                customAlert
+            }
+            
+            if vm.showLocationPermissionAlert{
+                locationPermissionAlert
+            }
         }
         .overlay(alignment: .bottom) {
             if let _ = vm.selectedRoute{
@@ -73,6 +81,10 @@ extension MapView{
             }
             .brightness(vm.progress < 1.0 ? -0.3 : 0.0)
     //            .brightness(-0.3)
+            .onMapCameraChange(frequency: .continuous, {context in
+                vm.currentSeeingRegionSpan = context.region.span
+                vm.currentSeeingRegionCenterCoordinate = context.camera.centerCoordinate//get the coordinate of the region dragged by user
+            })
             .onMapCameraChange(frequency: .onEnd, { context in
                 withAnimation(.bouncy) {
                     cameraPositionChanged = true
@@ -131,14 +143,6 @@ extension MapView{
                         searchThisAreaButton
                     }
                 }
-            }
-            .alert("エラ", isPresented: $vm.showAlert, actions: {
-                
-            }, message: {
-                Text(vm.alertMessage)
-            })
-            .alert(isPresented: $vm.showLocationPermissionAlert) {
-                LocationPermissionAlert()
             }
             .onAppear{
                 if let userLocation = vm.userLocation{
@@ -201,6 +205,75 @@ extension MapView{
 
 // MARK: UIComponents
 extension MapView{
+    private var customAlert: some View {
+        GroupBox("エラ") {
+            VStack(alignment: .center, spacing: 20) {
+                Text(vm.alertMessage)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 12)
+                
+                HStack(spacing: 16) {
+                    cancelButton
+                }
+            }
+            .frame(height: 150)
+        }
+        .padding(.horizontal, 50)
+        .shadow(radius: 10,y:5)
+    }
+
+    private var locationPermissionAlert: some View {
+        GroupBox("エラ") {
+            VStack(alignment: .center, spacing: 20) {
+                Text(vm.alertMessage)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 12)
+                
+                HStack(spacing: 16) {
+                    locationSettingsButton
+                    cancelButton
+                }
+            }
+            .frame(height: 150)
+        }
+        .padding(.horizontal, 50)
+        .shadow(radius: 10,y:5)
+    }
+    
+    private var locationSettingsButton: some View {
+        Button(action: {
+            vm.showLocationPermissionAlert = false
+            Appetite.LocationPermissionAlert.show()
+        }) {
+            Text("設定")
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(.gray)
+                .foregroundColor(.white)
+                .cornerRadius(8)
+        }
+    }
+
+    
+    private var cancelButton: some View {
+        Button(action: {
+            vm.showAlert = false
+            vm.showLocationPermissionAlert = false
+        }) {
+            Text("キャンセル")
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(.red)
+                .foregroundColor(.white)
+                .cornerRadius(8)
+        }
+    }
+
+
+    
+    
     private var searchThisAreaButton:some View{
         VStack{
             Button{
