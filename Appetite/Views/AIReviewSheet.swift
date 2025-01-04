@@ -48,7 +48,7 @@ final class AIReviewSheetViewModel:ObservableObject{
         DispatchQueue.main.async {
             
             
-            self.timer = Timer.scheduledTimer(withTimeInterval: 0.06, repeats: true) {[weak self] timer in
+            self.timer = Timer.scheduledTimer(withTimeInterval: 0.03, repeats: true) {[weak self] timer in
                 if index < text.count {
                     self?.displayedText.append(text[text.index(text.startIndex, offsetBy: index)])
                     index += 1

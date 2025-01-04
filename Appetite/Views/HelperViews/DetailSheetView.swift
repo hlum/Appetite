@@ -14,112 +14,124 @@ struct DetailSheetView: View {
     let shop: Shop
     @Binding var showRoutesSheet:Bool
     var body: some View {
-        NavigationStack{
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    // Shop name and address
-                    if !shop.catchPharse.isEmpty{
-                        Text(shop.catchPharse)
-                            .font(.title3)
-                            .bold()
-                    }
-                    
-                    
-                    
-                    Text(shop.address)
-                        .font(.subheadline)
-                        .textSelection(.enabled)
-                    
-                    // Access information
-                    Text(shop.access)
-                        .font(.caption)
-                    
-                    VStack(alignment:.leading,spacing: .zero) {
-                        Text("ホームページ")
-                            .font(.caption)
-                        if let url = URL(string: shop.urls.pc){
-                            Link(shop.name, destination: url)
-                                .foregroundStyle(.blue)
+            NavigationStack{
+                ZStack{
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 16) {
+                           shopHeaderDetails
+                            
+                           photoSection
+                            
+                            Label("営業時間", systemImage: "clock")
+                                .bold()
+                            Text(formatOperatingHours(shop.open))
+                            
+                            detailCardView
+                            .padding(.bottom,70)//経路Buttonのためスペース
                         }
+                        .padding(.horizontal)
                     }
-                    
-                    
-                    // Photos
-                    let urlString = shop.photo.pc.l
-                    let url = URL(string: urlString)
-                    WebImage(url: url)
-                        .placeholder(content: {
-                            Image(.placeholder)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(height: 250)
-                                .frame(maxWidth: .infinity)
-                                .cornerRadius(15)
-                                .clipped()
-                                .shadow(radius: 10)
-                        })
+                    directionButton
+                        .navigationTitle(shop.name)
+                }
+            }
+    }
+    
+    private var shopHeaderDetails:some View{
+        VStack(alignment:.leading){
+            if !shop.catchPharse.isEmpty{
+                Text(shop.catchPharse)
+                    .font(.title3)
+                    .bold()
+            }
+            
+            
+            
+            Text(shop.address)
+                .font(.subheadline)
+                .textSelection(.enabled)
+            
+            // Access information
+            Text(shop.access)
+                .font(.caption)
+            
+            VStack(alignment:.leading,spacing: .zero) {
+                Text("ホームページ")
+                    .font(.caption)
+                if let url = URL(string: shop.urls.pc){
+                    Link(shop.name, destination: url)
+                        .foregroundStyle(.blue)
+                }
+            }
+        }
+    }
+    
+    private var photoSection:some View{
+        // Photos
+        ZStack{
+            let urlString = shop.photo.pc.l
+            let url = URL(string: urlString)
+            WebImage(url: url)
+                .placeholder(content: {
+                    Image(.placeholder)
                         .resizable()
-                        .frame(height: 250)
                         .scaledToFit()
+                        .frame(height: 250)
+                        .frame(maxWidth: .infinity)
                         .cornerRadius(15)
                         .clipped()
                         .shadow(radius: 10)
-                    
-                    Label("営業時間", systemImage: "clock")
-                        .bold()
-                    Text(formatOperatingHours(shop.open))
-                    
-                    GroupBox("その他詳細"){
-                        // Additional shop details in a grid
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                            detailRow(title: "ジャンル", value: shop.genre.name)
-                            detailRow(title: "サブジャンル", value: shop.subGenre?.name ?? "なし")
-                            detailRow(title: "駅", value: shop.stationName ?? "なし")
-                            detailRow(title: "宴会収容人数", value: "\(shop.partyCapacity?.displayValue ?? "") 人")
-                            detailRow(title: "Wi-Fi", value: shop.wifi ?? "不明")
-                            detailRow(title: "個室", value: shop.privateRoom ?? "不明")
-                            detailRow(title: "飲み放題", value: shop.freeDrink ?? "不明")
-                            detailRow(title: "食べ放題", value: shop.freeFood ?? "不明")
-                            detailRow(title: "定休", value: shop.close ?? "不明")
-                            detailRow(title: "駐車場", value: shop.parking ?? "不明")
-                            detailRow(title: "喫煙席", value: shop.nonSmoking ?? "不明")
-                            detailRow(title: "平均ディナー予算", value: formatBudgetString(shop.budget?.average))
-                            detailRow(title: "料金備考", value: shop.budget?.budgetMemo ?? "なし")
-                            detailRow(title: "カード", value: shop.card ?? "不明")
-                        }
-                    }
-                    .padding(.bottom,70)//経路Buttonのためスペース
-                    
-                    // Button for directions
-                    Spacer()
-                }
-                .padding()
-            }
-            .overlay(alignment: .bottom) {
-                Button {
-                    // Action for directions button
-                    dismiss.callAsFunction()
-                    showRoutesSheet = true
-                } label: {
-                    Text("経路")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 55)
-                        .background(Color.blue)
-                        .cornerRadius(10)
-                        .foregroundColor(.white)
-                        .shadow(color: Color.blue.opacity(0.4), radius: 10, y: -5)
-                }
-                .padding(.horizontal)
-                .padding(.bottom, 10)
-            }
-            
-            .navigationTitle(shop.name)
+                })
+                .resizable()
+                .frame(height: 250)
+                .scaledToFit()
+                .cornerRadius(15)
+                .clipped()
+                .shadow(radius: 10)
         }
-        //        .background(.systemWhite)
-        .cornerRadius(15)
-        .shadow(radius: 10)
-        .foregroundStyle(.systemBlack)
+    }
+    
+    private var detailCardView:some View{
+        GroupBox("その他詳細"){
+            // Additional shop details in a grid
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                detailRow(title: "ジャンル", value: shop.genre.name)
+                detailRow(title: "サブジャンル", value: shop.subGenre?.name ?? "なし")
+                detailRow(title: "駅", value: shop.stationName ?? "なし")
+                detailRow(title: "宴会収容人数", value: "\(shop.partyCapacity?.displayValue ?? "") 人")
+                detailRow(title: "Wi-Fi", value: shop.wifi ?? "不明")
+                detailRow(title: "個室", value: shop.privateRoom ?? "不明")
+                detailRow(title: "飲み放題", value: shop.freeDrink ?? "不明")
+                detailRow(title: "食べ放題", value: shop.freeFood ?? "不明")
+                detailRow(title: "定休", value: shop.close ?? "不明")
+                detailRow(title: "駐車場", value: shop.parking ?? "不明")
+                detailRow(title: "喫煙席", value: shop.nonSmoking ?? "不明")
+                detailRow(title: "平均ディナー予算", value: formatBudgetString(shop.budget?.average))
+                detailRow(title: "料金備考", value: shop.budget?.budgetMemo ?? "なし")
+                detailRow(title: "カード", value: shop.card ?? "不明")
+            }
+        }
+    }
+    
+    private var directionButton:some View{
+        VStack{
+            Spacer()
+            Button {
+                // Action for directions button
+                dismiss.callAsFunction()
+                showRoutesSheet = true
+            } label: {
+                Text("経路")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 55)
+                    .background(Color.blue)
+                    .cornerRadius(10)
+                    .foregroundColor(.white)
+                    .shadow(color: Color.blue.opacity(0.4), radius: 10, y: -5)
+            }
+            .padding(.horizontal, 20)
+        }
     }
     
     // Helper function to display a detail row
@@ -198,5 +210,6 @@ struct DetailSheetView: View {
     ]
     NavigationStack{
         DetailSheetView(shop: dummyShops[0], showRoutesSheet: .constant(false))
+            .toolbarBackground(.hidden, for: .tabBar) // Added
     }
 }

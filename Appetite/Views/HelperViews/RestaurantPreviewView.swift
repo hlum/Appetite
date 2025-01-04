@@ -106,8 +106,7 @@ struct RestaurantPreviewView: View {
                     RoundedRectangle(cornerRadius: 10)
                         .stroke(.systemWhite, lineWidth: 5) // Add border
                 )
-                .shadow(color:.systemWhite,radius:1,y:2)
-                .offset(y:-20)
+                .shadow(color:.systemBlack,radius:10,y:2)
         })
             .onAppear{
                 vm.setRestaurant(selectedRestaurant)
@@ -120,7 +119,7 @@ struct RestaurantPreviewView: View {
             .background(
                 RoundedRectangle(cornerRadius: 10)
                     .fill(.systemWhite)
-                    .offset(y:85)
+                    .offset(y:65)
                     .onTapGesture {
                         showDetailSheetView = true
                     }

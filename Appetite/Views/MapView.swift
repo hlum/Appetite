@@ -11,6 +11,7 @@ import Lottie
 
 //MARK: MapView body
 struct MapView: View {
+    @State var swipedLeft:Bool = false
     @State var isDragging:Bool = false
     @AppStorage("aiButtonXOffset") var aiButtonXOffset:Double = 200
     @AppStorage("aiButtonYOffset") var aiButtonYOffset:Double = 50
@@ -179,7 +180,7 @@ extension MapView{
             if vm.progress < 1.0{
                 VStack{
                     LottieView(name: "LoadingAnimation", loopMode: .loop, labelText: nil)
-                        .frame(height:400)
+                        .frame(height:300)
                 }
             }
             if vm.selectedRestaurant != nil{
@@ -231,7 +232,7 @@ extension MapView{
                             loopMode: .loop,
                             labelText: "AI評価"
                         )
-                        .frame(width: 100, height: 150)
+                        .frame(width: 110, height: 150)
                     }
                 }
                 .simultaneousGesture(
@@ -405,8 +406,8 @@ extension MapView{
                         .padding()
                         .frame(maxWidth: .infinity)
                         .transition(.asymmetric(
-                            insertion: .move(edge: .trailing),
-                            removal: .move(edge: .bottom)
+                            insertion: .move(edge:swipedLeft ? .trailing : .leading),
+                            removal: .move(edge: swipedLeft ? .leading : .trailing)
                         ))
                         .offset(previewDragOffset)
                         .gesture(
@@ -698,19 +699,22 @@ extension MapView{
     }
     private func handleDrageEnd(_ value:DragGesture.Value){
         withAnimation(.spring(response: 0.1, dampingFraction: 1, blendDuration: 0)) {
+            previewDragOffset = .zero
+
             if value.translation.height > 100 {
                 // swipe down
                 vm.selectedRestaurant = nil
             }
             if value.translation.width < -70{
                 //swipe left
+                swipedLeft = true
                 handleLeftSwipe(value:value)
             }
             if value.translation.width > 70{
+                swipedLeft = false
                 //swipe right
                 handleRightSwipe(value:value)
             }
-            previewDragOffset = .zero
         }
     }
     
