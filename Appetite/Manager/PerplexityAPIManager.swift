@@ -18,7 +18,6 @@ final class PerplexityAPIManager{
     llama-3.1-sonar-huge-128k-online     405B                   127,072    Chat Completion
      */
     private let model = "llama-3.1-sonar-small-128k-online"
-    private let maxToken = 400 //レスポンスのトークン数上限
     private let temperature = 0.1 //判断力(デフォルト：０.２）0~2 （小さい方が判断力いい）
     
     static let shared = PerplexityAPIManager()
@@ -47,7 +46,6 @@ final class PerplexityAPIManager{
         let requestBody:[String:Any] = [
             "model": model,
             "messages":messages,
-            "max_tokens":maxToken,
             "temperature":0.1
         ]
         
