@@ -80,12 +80,13 @@ extension MapView{
                 vm.currentSeeingRegionSpan = context.region.span
                 vm.currentSeeingRegionCenterCoordinate = context.camera.centerCoordinate//get the coordinate of the region dragged by user
             })
-            .mapStyle(mapStyle == .hybrid ? .hybrid : .standard)
+            .mapStyle(mapStyle == .hybrid ? .hybrid(elevation:.realistic) : .standard(elevation:.realistic))
             .sheet(
                 isPresented: $vm.showRoutesSheet,
                 content: {
                     RoutesSheetView(
                         getRoutes: vm.getAvailableRoutes,
+                        selectedRestaurant: $vm.selectedRestaurant,
                         availableRoutes: $vm.availableRoutes,
                         selectedRoute: $vm.selectedRoute,
                         transportType: $vm.transportType
@@ -187,7 +188,7 @@ extension MapView{
             .overlay(alignment: .topLeading, content: {
                 ToolBar
             })
-            .mapStyle(mapStyle == .hybrid ? .hybrid : .standard)
+            .mapStyle(mapStyle == .hybrid ? .hybrid(elevation:.realistic,showsTraffic: true) : .standard(elevation:.realistic,showsTraffic: true))
             .onAppear{
                 if let userLocation = vm.userLocation{
                     vm.moveCamera(to:userLocation)

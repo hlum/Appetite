@@ -13,6 +13,7 @@ extension MKDirectionsTransportType: Hashable {}
 
 struct RoutesSheetView: View {
     var getRoutes: () -> Void
+    @Binding var selectedRestaurant:Shop?
     @Binding var availableRoutes: [MKRoute]
     @Binding var selectedRoute: MKRoute?
     @Binding var transportType: MKDirectionsTransportType
@@ -27,24 +28,64 @@ struct RoutesSheetView: View {
                 Image(systemName:"car.fill")
                     .font(.headline)
                     .tag(MKDirectionsTransportType.automobile)
+                Image(systemName: "train.side.rear.car")
+                    .font(.headline)
+                    .tag(MKDirectionsTransportType.transit)
             }
             .pickerStyle(SegmentedPickerStyle())
             .padding(.horizontal)
             .shadow(radius: 5)
             
-            // Display Routes
-            if !availableRoutes.isEmpty {
-                ScrollView {
-                    LazyVStack(spacing: 10) {
-                        ForEach(availableRoutes, id: \.self) { route in
-                            RouteRowView(route: route, selectedRoute: $selectedRoute)
+            if transportType != .transit{//公共交通機関の場合はMap、Google Mapへ誘導する
+                // Display Routes
+                if !availableRoutes.isEmpty {
+                    ScrollView {
+                        LazyVStack(spacing: 10) {
+                            ForEach(availableRoutes, id: \.self) { route in
+                                RouteRowView(route: route, selectedRoute: $selectedRoute)
+                            }
                         }
+                        .padding()
                     }
-                    .padding()
+                } else {
+                    ContentUnavailableView("案内可能なルートはありません。", systemImage: "x.circle")
+                        .padding(.top, 20)
                 }
-            } else {
-                ContentUnavailableView("案内可能なルートはありません。", systemImage: "x.circle")
-                    .padding(.top, 20)
+            }else{
+                VStack{
+                    Button {
+                        if let selectedRestaurant = selectedRestaurant,
+                           let url = URL(string: "maps://?saddr=&daddr=\(selectedRestaurant.lat),\(selectedRestaurant.lon)&dirflg=r"){
+                            UIApplication.shared.open(url,options: [:],completionHandler: nil)
+                        }
+                    } label: {
+                        Text("Mapで開く")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 55)
+                            .background(.systemBlack)
+                            .foregroundStyle(.systemWhite)
+                            .cornerRadius(10)
+                            .padding()
+                    }
+                    
+                    Button {
+                        if let selectedRestaurant = selectedRestaurant,
+                           let url = URL(string:"https://www.google.com/maps/dir/?api=1&origin=&destination=\(selectedRestaurant.lat),\(selectedRestaurant.lon)&travelmode=transit"){
+                            UIApplication.shared.open(url,options: [:],completionHandler: nil)
+                        }
+                    } label: {
+                        Text("Google Mapで開く")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 55)
+                            .background(.systemBlack)
+                            .foregroundStyle(.systemWhite)
+                            .cornerRadius(10)
+                            .padding()
+                    }
+
+                }
             }
             
             Spacer()

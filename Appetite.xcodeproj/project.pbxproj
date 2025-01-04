@@ -19,10 +19,21 @@
 		D08E5B68EEDDD4CBB935E5C4 /* Pods_Appetite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Appetite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		B58326312D2824D3000E2F7E /* Exceptions for "Appetite" folder in "Appetite" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = B5FC6AA62D1BA9A500D0FA2D /* Appetite */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		B5FC6AA92D1BA9A500D0FA2D /* Appetite */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				B58326312D2824D3000E2F7E /* Exceptions for "Appetite" folder in "Appetite" target */,
 			);
 			path = Appetite;
 			sourceTree = "<group>";
@@ -332,6 +343,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Appetite/Info.plist;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "レストランへのご案内や周囲のレストランを検索するため位置情報を取得する必要があります。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -369,6 +381,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Appetite/Info.plist;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "レストランへのご案内や周囲のレストランを検索するため位置情報を取得する必要があります。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
