@@ -55,9 +55,7 @@ final class PerplexityAPIManager{
         
         let (data,response) = try await URLSession.shared.data(for: request)
         
-        if let responseBody = String(data:data,encoding: .utf8){
-            print(responseBody)
-        }
+
         //レスポンスをチェックする
         if let httpResponse = response as? HTTPURLResponse,
            httpResponse.statusCode != 200{
@@ -65,6 +63,8 @@ final class PerplexityAPIManager{
         }
         
         //JSON Decode
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
         let perplexityResponse = try JSONDecoder().decode(PerplexityResponseModel.self, from: data)
         
         return perplexityResponse

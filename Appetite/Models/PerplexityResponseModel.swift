@@ -19,13 +19,13 @@ struct PerplexityResponseModel: Codable {
 struct Choice: Codable {
     let index: Int
     let message: Message
-    let finish_reason: String
+    let finishReason: String
 }
 
 struct Usage: Codable {
-    let prompt_tokens: Int
+    let promptTokens: Int
     let completion_tokens: Int
-    let total_tokens: Int
+    let totalTokens: Int
 }
 
 struct Message: Codable {
