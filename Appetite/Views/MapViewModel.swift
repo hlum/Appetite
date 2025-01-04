@@ -11,6 +11,7 @@ import SwiftUI
 import Combine
 
 final class MapViewModel:ObservableObject{
+    @Published var showAiResultSheet:Bool = false
     
     //ROUTES STUFFS
     @Published var transportType:MKDirectionsTransportType = .automobile

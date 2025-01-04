@@ -11,6 +11,8 @@ import Lottie
 
 //MARK: MapView body
 struct MapView: View {
+    @AppStorage("aiButtonXOffset") var aiButtonXOffset:Double = 200
+    @AppStorage("aiButtonYOffset") var aiButtonYOffset:Double = 50
     @State var previewDragOffset:CGSize = .zero
     @State var showProgressView:Bool = false
     @State var cameraPositionChanged = false
@@ -107,6 +109,9 @@ extension MapView{
                     .presentationBackgroundInteraction(.disabled)
                     .presentationDragIndicator(.visible)
             })
+            .sheet(isPresented: $vm.showAiResultSheet, content: {
+                
+            })
             .sheet(
                 isPresented: $vm.showNearbyRestaurantSheet,
                 content: {
@@ -169,9 +174,12 @@ extension MapView{
 
             if vm.progress < 1.0{
                 VStack{
-                    LottieView(name: "LoadingAnimation", loopMode: .loop)
+                    LottieView(name: "LoadingAnimation", loopMode: .loop, labelText: nil)
                         .frame(height:400)
                 }
+            }
+            if vm.selectedRestaurant != nil{
+                aiReviewButton
             }
         }
     }
@@ -205,6 +213,64 @@ extension MapView{
 
 // MARK: UIComponents
 extension MapView{
+    private var aiReviewButton:some View{
+        GeometryReader { geometry in
+            VStack {
+                Button {
+                    // Button action
+                } label: {
+                    VStack {
+                        LottieView(
+                            name: "robotAnimation.json",
+                            loopMode: .loop,
+                            labelText: "AI評価"
+                        )
+                        .frame(width: 100, height: 150)
+                    }
+                }
+                .simultaneousGesture(
+                    DragGesture()
+                        .onChanged { value in
+                            // ドラッグ中の新しい位置を計算
+                            let newOffset = CGSize(
+                                width: aiButtonXOffset + value.translation.width,
+                                height: aiButtonYOffset + value.translation.height
+                            )
+                            
+                            // 画面の範囲内での移動制限
+                            let maxWidth = geometry.size.width - 100 // ボタンの幅を考慮した最大横位置
+                            let maxHeight = geometry.size.height - 150 // ボタンの高さ
+                            withAnimation(.spring){
+                                // 画面外に出ないように値を制限
+                                aiButtonXOffset = min(max(newOffset.width, 0), maxWidth)
+                                aiButtonYOffset = min(max(newOffset.height, 0), maxHeight)
+                            }
+                        }
+                        .onEnded { value in
+                            withAnimation(.spring()) {
+                                // ドラッグ終了時に最終位置を保持またはリセット
+                                let newOffset = CGSize(
+                                    width: aiButtonXOffset + value.translation.width,
+                                    height: aiButtonYOffset + value.translation.height
+                                )
+                                
+                                // 終了時も範囲内に制限
+                                let maxWidth = geometry.size.width - 100 // ボタンの幅を考慮した最大横位置
+                                let maxHeight = geometry.size.height - 150 // ボタンの高さ
+                                
+                                withAnimation(.spring){
+                                    // 画面外に出ないように値を制限
+                                    aiButtonXOffset = min(max(newOffset.width, 0), maxWidth)
+                                    aiButtonYOffset = min(max(newOffset.height, 0), maxHeight)
+                                }
+                            }
+                        }
+                )
+
+            }
+            .offset(CGSize(width: aiButtonXOffset, height: aiButtonYOffset)) // Apply the clamped offset
+        }
+    }
     private var customAlert: some View {
         GroupBox("エラ") {
             VStack(alignment: .center, spacing: 20) {
