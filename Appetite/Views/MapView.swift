@@ -110,7 +110,10 @@ extension MapView{
                     .presentationDragIndicator(.visible)
             })
             .sheet(isPresented: $vm.showAiResultSheet, content: {
-                
+                if let selectedRestaurant = vm.selectedRestaurant{
+                    let request = RequestModel(for: selectedRestaurant)
+                    AIReviewSheet(request: request)
+                }
             })
             .sheet(
                 isPresented: $vm.showNearbyRestaurantSheet,
@@ -217,7 +220,7 @@ extension MapView{
         GeometryReader { geometry in
             VStack {
                 Button {
-                    // Button action
+                    vm.showAiResultSheet = true
                 } label: {
                     VStack {
                         LottieView(

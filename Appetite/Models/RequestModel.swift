@@ -11,4 +11,10 @@ struct RequestModel{
     let restaurantName:String
     let restaurantAdress:String
     let restaurantGenre:String
+    
+    init(for shop:Shop){
+        self.restaurantName = shop.name
+        self.restaurantGenre = shop.genre.name
+        self.restaurantAdress = shop.address
+    }
 }
