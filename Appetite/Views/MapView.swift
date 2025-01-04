@@ -11,6 +11,7 @@ import Lottie
 
 //MARK: MapView body
 struct MapView: View {
+    @State var isDragging:Bool = false
     @AppStorage("aiButtonXOffset") var aiButtonXOffset:Double = 200
     @AppStorage("aiButtonYOffset") var aiButtonYOffset:Double = 50
     @State var previewDragOffset:CGSize = .zero
@@ -220,7 +221,9 @@ extension MapView{
         GeometryReader { geometry in
             VStack {
                 Button {
-                    vm.showAiResultSheet = true
+                    if !isDragging{//押し間違いを防止する
+                        vm.showAiResultSheet = true
+                    }
                 } label: {
                     VStack {
                         LottieView(
@@ -234,6 +237,7 @@ extension MapView{
                 .simultaneousGesture(
                     DragGesture()
                         .onChanged { value in
+                            isDragging = true
                             // ドラッグ中の新しい位置を計算
                             let newOffset = CGSize(
                                 width: aiButtonXOffset + value.translation.width,
@@ -265,6 +269,10 @@ extension MapView{
                                     // 画面外に出ないように値を制限
                                     aiButtonXOffset = min(max(newOffset.width, 0), maxWidth)
                                     aiButtonYOffset = min(max(newOffset.height, 0), maxHeight)
+                                    //押し間違いを防止する
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                        isDragging = false
+                                    }
                                 }
                             }
                         }
@@ -274,6 +282,7 @@ extension MapView{
             .offset(CGSize(width: aiButtonXOffset, height: aiButtonYOffset)) // Apply the clamped offset
         }
     }
+    
     private var customAlert: some View {
         GroupBox("エラ") {
             VStack(alignment: .center, spacing: 20) {
