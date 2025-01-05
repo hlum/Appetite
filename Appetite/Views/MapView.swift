@@ -11,7 +11,10 @@ import Lottie
 
 //MARK: MapView body
 struct MapView: View {
+    //For Transition
     @State var swipedLeft:Bool = false
+    @State var swipedDown:Bool = false
+    
     @State var isDragging:Bool = false
     @AppStorage("aiButtonXOffset") var aiButtonXOffset:Double = 200
     @AppStorage("aiButtonYOffset") var aiButtonYOffset:Double = 50
@@ -406,8 +409,9 @@ extension MapView{
                         .padding()
                         .frame(maxWidth: .infinity)
                         .transition(.asymmetric(
-                            insertion: .move(edge:swipedLeft ? .trailing : .leading),
-                            removal: .move(edge: swipedLeft ? .leading : .trailing)
+                            insertion: .move(edge:swipedLeft ? .trailing : .bottom),
+                            removal: .move(edge: swipedDown ? .bottom :
+                                           swipedLeft ? .bottom : .trailing)
                         ))
                         .offset(previewDragOffset)
                         .gesture(
@@ -619,19 +623,28 @@ extension MapView{
                 .resizable()
                 .scaledToFit()
                 .frame(
-                    width:isSelected ? 30 : 20,
-                    height:isSelected ? 30 : 20
+                    width: isSelected ? 30 : 20,
+                    height: isSelected ? 30 : 20
                 )
-                .foregroundColor(.white)
+                .foregroundColor(.black) //for the defaut systemIcon
                 .padding(4)
-                .background(isSelected ? .red :  .orange)
+                .background(
+                       Circle()
+                           .fill(Color.white)
+                   )
+                .background(isSelected ? .orange : .white)
                 .cornerRadius(36)
+                .overlay(
+                    Circle()
+                        .stroke(isSelected ? Color.red : Color.orange, lineWidth: 2)
+                )
+                .padding(4)
                 .animation(.bouncy, value: isSelected)
 
             Image(systemName: "triangle.fill")
                 .resizable()
                 .scaledToFit()
-                .foregroundColor(isSelected ? .red :  .orange)
+                .foregroundColor(isSelected ? .red : .orange)
                 .frame(width: 10, height: 10)
                 .rotationEffect(Angle(degrees: 180))
                 .offset(y:isSelected ? -5 : -3)
@@ -681,6 +694,10 @@ extension MapView{
                 previewDragOffset.height = value.translation.height
             }
         }
+        if value.translation.height > 100{
+            swipedDown = true
+            swipedLeft = false //transitionのためスワイプされてる時から更新する
+        }
         if value.translation.height < -100{//終わった時に開くじゃなくてSwipeの感が欲しいのでここで処理
             //swipe up
             previewDragOffset.height = value.translation.height
@@ -698,20 +715,24 @@ extension MapView{
         }
     }
     private func handleDrageEnd(_ value:DragGesture.Value){
-        withAnimation(.spring(response: 0.1, dampingFraction: 1, blendDuration: 0)) {
+        withAnimation(.spring(response: 0.01, dampingFraction: 1, blendDuration: 0)) {
             previewDragOffset = .zero
 
             if value.translation.height > 100 {
                 // swipe down
+                swipedDown = true
+                swipedLeft = false
                 vm.selectedRestaurant = nil
             }
             if value.translation.width < -70{
                 //swipe left
                 swipedLeft = true
+                swipedDown = false
                 handleLeftSwipe(value:value)
             }
             if value.translation.width > 70{
                 swipedLeft = false
+                swipedDown = false
                 //swipe right
                 handleRightSwipe(value:value)
             }
