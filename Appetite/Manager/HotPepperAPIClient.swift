@@ -140,7 +140,8 @@ class HotPepperAPIClient: ObservableObject {
                 specialCategories2: specialCategories2,
                 start: start,
                 count: countForThisPage
-            ) { result in
+            ) {[weak self] result in
+                guard let self = self else {return}
                 switch result {
                 case .completed(let response):
                     allShops.append(contentsOf: response.results.shops)
@@ -232,7 +233,9 @@ class HotPepperAPIClient: ObservableObject {
         
         print("DEBUG url: \(url)")
         
-        let task = URLSession.shared.dataTask(with: url) { data, response, error in
+        observer?.invalidate()
+
+        let task = URLSession.shared.dataTask(with: url) {[weak self] data, response, error in
             if let error = error {
                 completion(.error(error))
                 return
@@ -253,7 +256,7 @@ class HotPepperAPIClient: ObservableObject {
             }
         }
         
-        self.observer = task.progress.observe(\.fractionCompleted) { progress, _ in
+        self.observer = task.progress.observe(\.fractionCompleted) {[weak self] progress, _ in
             if progress.fractionCompleted < 1.0 {
                 completion(.progress(progress.fractionCompleted))
             }

@@ -13,11 +13,12 @@ import SDWebImageSwiftUI
 
 struct NearbyRestaurantSheetView: View {
     @Binding var restaurantsShowing: [Shop]
-    @Binding var selectedRestaurant:Shop?
+    @Binding var selectedRestaurant: Shop?
+    
     init(
-        nearbyRestaurants:Binding<[Shop]>,
-        cameraPosition:Binding<CLLocationCoordinate2D?>,
-        selectedRestaurant:Binding<Shop?>
+        nearbyRestaurants: Binding<[Shop]>,
+        cameraPosition: Binding<CLLocationCoordinate2D?>,
+        selectedRestaurant: Binding<Shop?>
     ) {
         self._restaurantsShowing = nearbyRestaurants
         self._selectedRestaurant = selectedRestaurant
@@ -26,25 +27,20 @@ struct NearbyRestaurantSheetView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section{
-                    LazyVStack(alignment:.leading){
-                        if !restaurantsShowing.isEmpty{
-                            ForEach(restaurantsShowing,id:\.id) { shop in
-                                    listItemView(for: shop)
-                                    .onTapGesture {
-                                        selectedRestaurant = shop
-                                    }
-                            }
-                        }else{
-                            ContentUnavailableView("検索結果に一致するものはありません。", systemImage: "magnifyingglass")
+                Section(header: Text("レストラン一覧")) {
+                    if restaurantsShowing.isEmpty {
+                        ContentUnavailableView("検索結果に一致するものはありません。", systemImage: "magnifyingglass")
+                    } else {
+                        ForEach(restaurantsShowing, id: \.id) { shop in
+                            listItemView(for: shop)
+                                .onTapGesture {
+                                    selectedRestaurant = shop
+                                }
                         }
                     }
-                }header: {
-                    Text("レストラン一覧")
                 }
             }
             .listStyle(.plain)
-//            .navigationTitle("\(restaurantsShowing.count)")
         }
     }
 }
