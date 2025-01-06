@@ -165,7 +165,9 @@ struct SubGenre:Codable{
     let name:String
     let code:String
 }
-struct Genre: Codable {
+struct Genre: FilterItemProtocol,Codable {
+    static var filterType: FilterType = .genre
+    let id:UUID = UUID()
     let code: String
     let name: String
     var image: Image {
@@ -208,10 +210,17 @@ struct Genre: Codable {
             return Image(systemName: "fork.knife")
         }
     }
+    
+    static func ==(lhs: Genre, rhs: Genre) -> Bool {
+        return lhs.code == rhs.code
+    }
+
 }
 
 
-struct Budget: Codable {
+struct Budget:Codable {
+    
+    static var filterType: FilterType = .budget
     let code: String
     let name: String
     let average: String

@@ -7,9 +7,11 @@
 
 import Foundation
 
-protocol FilterItemProtocol:CaseIterable,Hashable{
-    var rawValue:String{get}
+protocol FilterItemProtocol:Hashable,Equatable,Identifiable{
     static var filterType:FilterType{get}
+    var name: String { get }
+    var code: String { get }
+    
 }
 
 enum FilterType{

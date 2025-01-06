@@ -20,7 +20,7 @@ struct FilterSheetView: View {
                     ScrollView(showsIndicators: false) {
                         VStack {
                             if !(filterManager.selectedGenres.isEmpty &&
-                                filterManager.selectedBudgets.isEmpty &&
+                                filterManager.selectedBudgetFilterModels.isEmpty &&
                                 filterManager.selectedSpecialCategory.isEmpty &&
                                 filterManager.selectedSpecialCategory2.isEmpty) {
                                 selectedFiltersSection
@@ -30,10 +30,10 @@ struct FilterSheetView: View {
                                     .frame(maxWidth: .infinity)
                             }
                             
-                            FilterSection(title: "予算", items: Array(Budgets.allCases))
-                            FilterSection(title: "ジャンル", items: Array(Genres.allCases))
-                            FilterSection(title: "特集", items: Array(SpecialCategory.allCases))
-                            FilterSection(title: "特集(2)", items: Array(SpecialCategory2.allCases))
+                            FilterSection(title: "予算", items: filterManager.availableBudgets)
+                            FilterSection(title: "ジャンル", items: filterManager.availableGenres)
+                            FilterSection(title: "特集", items: filterManager.availableSpecialCategories)
+                            FilterSection(title: "特集(2)", items: filterManager.availableSpecialCategories2)
                         }
                         .padding(.bottom, 70) //Dismissボタンのためのスペース
                     }
@@ -76,8 +76,8 @@ struct FilterSheetView: View {
                     FilterGroupView(title: "ジャンル", items: filterManager.selectedGenres)
                 }
                 
-                if !filterManager.selectedBudgets.isEmpty {
-                    FilterGroupView(title: "予算", items: filterManager.selectedBudgets)
+                if !filterManager.selectedBudgetFilterModels.isEmpty {
+                    FilterGroupView(title: "予算", items: filterManager.selectedBudgetFilterModels)
                 }
                 
                 if !filterManager.selectedSpecialCategory.isEmpty {
@@ -111,7 +111,7 @@ struct FilterSheetView: View {
     }
     private func deleteAllFilters(){
         filterManager.selectedGenres = []
-        filterManager.selectedBudgets = []
+        filterManager.selectedBudgetFilterModels = []
         filterManager.selectedSpecialCategory = []
         filterManager.selectedSpecialCategory2 = []
     }
@@ -133,11 +133,11 @@ struct FilterGroupView<T: FilterItemProtocol>: View {
                 .foregroundColor(.gray)
             
             LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
-                ForEach(items, id: \.rawValue) { item in
+                ForEach(items, id: \.code) { item in
                     Button {
                         handleFilterButtonPressed(for:item)
                     }label: {
-                        Text(item.rawValue)
+                        Text(item.name)
                             .font(.caption2)
                             .padding()
                             .background(isSelected(item) ? .systemBlack : .systemWhite)
@@ -158,9 +158,9 @@ extension FilterGroupView{
     private func isSelected(_ item:T)->Bool{
         switch T.filterType{
         case .budget:
-            return filterManager.selectedBudgets.contains(item as! Budgets)
+            return filterManager.selectedBudgetFilterModels.contains(item as! BudgetFilterModel)
         case .genre:
-            return filterManager.selectedGenres.contains(item as! Genres)
+            return filterManager.selectedGenres.contains(item as! Genre)
         case .specialCategory:
             return filterManager.selectedSpecialCategory.contains(item as! SpecialCategory)
         case .specialCategory2:
@@ -171,9 +171,9 @@ extension FilterGroupView{
     private func handleFilterButtonPressed<Y: FilterItemProtocol>(for item: Y) {
         switch Y.filterType {
         case .budget:
-            toggleSelection(for: item as? Budgets, in: &filterManager.selectedBudgets)
+            toggleSelection(for: item as? BudgetFilterModel, in: &filterManager.selectedBudgetFilterModels)
         case .genre:
-            toggleSelection(for: item as? Genres, in: &filterManager.selectedGenres)
+            toggleSelection(for: item as? Genre, in: &filterManager.selectedGenres)
         case .specialCategory:
             toggleSelection(for: item as? SpecialCategory, in: &filterManager.selectedSpecialCategory)
         case .specialCategory2:

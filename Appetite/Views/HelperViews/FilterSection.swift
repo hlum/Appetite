@@ -22,7 +22,7 @@ struct FilterSection<T:FilterItemProtocol>:View{
                         Button {
                             handleFilterButtonPressed(for:item)
                         }label: {
-                            Text(item.rawValue)
+                            Text(item.name)
                                 .lineLimit(1)
                                 .font(.caption2)
                                 .padding()
@@ -53,9 +53,9 @@ extension FilterSection{
     private func isSelected(_ item:T)->Bool{
         switch T.filterType{
         case .budget:
-            return filterManager.selectedBudgets.contains(item as! Budgets)
+            return filterManager.selectedBudgetFilterModels.contains(item as! BudgetFilterModel)
         case .genre:
-            return filterManager.selectedGenres.contains(item as! Genres)
+            return filterManager.selectedGenres.contains(item as! Genre)
         case .specialCategory:
             return filterManager.selectedSpecialCategory.contains(item as! SpecialCategory)
         case .specialCategory2:
@@ -66,9 +66,9 @@ extension FilterSection{
     private func handleFilterButtonPressed<Y: FilterItemProtocol>(for item: Y) {
         switch Y.filterType {
         case .budget:
-            toggleSelection(for: item as? Budgets, in: &filterManager.selectedBudgets)
+            toggleSelection(for: item as? BudgetFilterModel, in: &filterManager.selectedBudgetFilterModels)
         case .genre:
-            toggleSelection(for: item as? Genres, in: &filterManager.selectedGenres)
+            toggleSelection(for: item as? Genre, in: &filterManager.selectedGenres)
         case .specialCategory:
             toggleSelection(for: item as? SpecialCategory, in: &filterManager.selectedSpecialCategory)
         case .specialCategory2:

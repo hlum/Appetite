@@ -373,7 +373,7 @@ extension MapView{
                     vm
                         .searchRestaurantsWithSelectedFilters(
                             keyword:vm.searchText,
-                            budgets: filterManager.selectedBudgets,
+                            budgets: filterManager.selectedBudgetFilterModels,
                             genres: filterManager.selectedGenres,
                             selectedSpecialCategories: filterManager.selectedSpecialCategory,
                             selectedSpecialCategory2: filterManager.selectedSpecialCategory2
@@ -480,7 +480,7 @@ extension MapView{
     private var genresFilter:some View{
         ScrollView(.horizontal,showsIndicators: false) {
             LazyHStack{
-                ForEach(Genres.allCases,id:\.self) { genre in
+                ForEach(filterManager.availableGenres,id:\.code) { genre in
                     let filterSelected = filterManager.selectedGenres.contains(genre)
                     Button{
                         if !filterSelected{
@@ -508,26 +508,27 @@ extension MapView{
     private var budgetFilters:some View{
         ScrollView(.horizontal,showsIndicators: false) {
             LazyHStack{
-                ForEach(Budgets.allCases,id:\.self) { budget in
-                    let filterSelected = filterManager.selectedBudgets.contains(budget)
-                    Button{
-                        if !filterSelected{
-                            filterManager.selectedBudgets.append(budget)
-                        }else{
-                            if let index = filterManager.selectedBudgets.firstIndex(of: budget){
-                                filterManager.selectedBudgets.remove(at: index)
+                ForEach(filterManager.availableBudgets,id:\.code) { budget in
+                        // Check if the budget is in the selected list
+                    let filterSelected = filterManager.selectedBudgetFilterModels.contains(budget)
+                        Button {
+                            if !filterSelected {
+                                filterManager.selectedBudgetFilterModels.append(budget)
+                            } else {
+                                if let index = filterManager.selectedBudgetFilterModels.firstIndex(of: budget) {
+                                    filterManager.selectedBudgetFilterModels.remove(at: index)
+                                }
                             }
+                        } label: {
+                            Text(budget.name)
+                                .font(.caption)
+                                .padding(7)
+                                .background(filterSelected ? .systemBlack : .systemWhite)
+                                .foregroundStyle(filterSelected ? .systemWhite : .systemBlack)
+                                .cornerRadius(10)
+                                .shadow(radius: 3)
                         }
-                    }label:{
-                        Text(budget.rawValue)
-                            .padding(7)
-                            .font(.caption)
-                            .background(filterSelected ? .systemBlack : .systemWhite)
-                            .foregroundStyle(filterSelected ? .systemWhite : .systemBlack)
-                            .cornerRadius(10)
-                            .shadow(radius: 3)
                     }
-                }
             }
             .frame(height:40)
         }
@@ -623,8 +624,8 @@ extension MapView{
                 .resizable()
                 .scaledToFit()
                 .frame(
-                    width: isSelected ? 30 : 20,
-                    height: isSelected ? 30 : 20
+                    width: isSelected ? 40 : 20,
+                    height: isSelected ? 40 : 20
                 )
                 .foregroundColor(.black) //for the defaut systemIcon
                 .padding(4)
@@ -632,11 +633,10 @@ extension MapView{
                        Circle()
                            .fill(Color.white)
                    )
-                .background(isSelected ? .orange : .white)
                 .cornerRadius(36)
                 .overlay(
                     Circle()
-                        .stroke(isSelected ? Color.red : Color.orange, lineWidth: 2)
+                        .stroke(isSelected ? Color.red : Color.orange, lineWidth: isSelected ? 5 : 2)
                 )
                 .padding(4)
                 .animation(.bouncy, value: isSelected)
@@ -668,7 +668,7 @@ extension MapView{
             //フィルタが一つも選択されていない時はFalse
             vm.showSearchedRestaurants = !(
                 filterManager.selectedGenres.isEmpty &&
-                filterManager.selectedBudgets.isEmpty &&
+                filterManager.selectedBudgetFilterModels.isEmpty &&
                 filterManager.selectedSpecialCategory.isEmpty &&
                 filterManager.selectedSpecialCategory2.isEmpty &&
                 vm.searchText.isEmpty
@@ -678,7 +678,7 @@ extension MapView{
             //もし選択されてるレストランが条件が変わってリストにない時バグが出るから外す！！
             vm.selectedRestaurant =  nil
             
-            vm.searchRestaurantsWithSelectedFilters(keyword: vm.searchText,budgets: filterManager.selectedBudgets, genres: filterManager.selectedGenres, selectedSpecialCategories: filterManager.selectedSpecialCategory,selectedSpecialCategory2:filterManager.selectedSpecialCategory2)
+            vm.searchRestaurantsWithSelectedFilters(keyword: vm.searchText,budgets: filterManager.selectedBudgetFilterModels, genres: filterManager.selectedGenres, selectedSpecialCategories: filterManager.selectedSpecialCategory,selectedSpecialCategory2:filterManager.selectedSpecialCategory2)
         }
     }
 }
