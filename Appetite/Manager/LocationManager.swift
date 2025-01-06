@@ -49,6 +49,15 @@ final class LocationManager:NSObject,CLLocationManagerDelegate{
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let newLocation = locations.last else { return }
         NotificationCenter.default.post(name: Notification.Name("UserLocationUpdated"), object: nil) // ユーザーの一致が変わったらルートを更新するため
+        
+        let howRecent = newLocation.timestamp.timeIntervalSinceNow
+        guard abs(howRecent) < 15.0, // Location should be from last 15 seconds
+              newLocation.horizontalAccuracy < 100.0, // Accuracy within 100 meters
+              newLocation.coordinate.latitude != 0.0, // Not at null island
+              newLocation.coordinate.longitude != 0.0 else {
+            // Location is not good enough yet, wait for a better one
+            return
+        }
         onLocationUpdate?(.success(newLocation.coordinate))
     }
     

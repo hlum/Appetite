@@ -134,6 +134,7 @@ extension RestaurantPreviewView{
     private var imageSection:some View{
         ZStack{
             if let photoURLString = selectedRestaurant.logoImage,
+               photoURLString != "https://imgfp.hotp.jp/SYS/cmn/images/common/diary/custom/m30_img_noimage.gif",
                let photoURL = URL(string:photoURLString){
                 WebImage(url: photoURL)
                     .placeholder(content: {

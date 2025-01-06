@@ -13,11 +13,12 @@ import SDWebImageSwiftUI
 
 struct NearbyRestaurantSheetView: View {
     @Binding var restaurantsShowing: [Shop]
-    @Binding var selectedRestaurant:Shop?
+    @Binding var selectedRestaurant: Shop?
+    
     init(
-        nearbyRestaurants:Binding<[Shop]>,
-        cameraPosition:Binding<CLLocationCoordinate2D?>,
-        selectedRestaurant:Binding<Shop?>
+        nearbyRestaurants: Binding<[Shop]>,
+        cameraPosition: Binding<CLLocationCoordinate2D?>,
+        selectedRestaurant: Binding<Shop?>
     ) {
         self._restaurantsShowing = nearbyRestaurants
         self._selectedRestaurant = selectedRestaurant
@@ -26,25 +27,20 @@ struct NearbyRestaurantSheetView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section{
-                    LazyVStack(alignment:.leading){
-                        if !restaurantsShowing.isEmpty{
-                            ForEach(restaurantsShowing,id:\.id) { shop in
-                                    listItemView(for: shop)
-                                    .onTapGesture {
-                                        selectedRestaurant = shop
-                                    }
-                            }
-                        }else{
-                            ContentUnavailableView("検索結果に一致するものはありません。", systemImage: "magnifyingglass")
+                Section(header: Text("レストラン一覧")) {
+                    if restaurantsShowing.isEmpty {
+                        ContentUnavailableView("検索結果に一致するものはありません。", systemImage: "magnifyingglass")
+                    } else {
+                        ForEach(restaurantsShowing, id: \.id) { shop in
+                            listItemView(for: shop)
+                                .onTapGesture {
+                                    selectedRestaurant = shop
+                                }
                         }
                     }
-                }header: {
-                    Text("レストラン一覧")
                 }
             }
             .listStyle(.plain)
-//            .navigationTitle("\(restaurantsShowing.count)")
         }
     }
 }
@@ -52,7 +48,9 @@ struct NearbyRestaurantSheetView: View {
 extension NearbyRestaurantSheetView {
     private func listItemView(for shop: Shop) -> some View {
         HStack(alignment: .top, spacing: 12) {
-            if let logoImage = shop.logoImage, let url = URL(string: logoImage) {
+            if let logoImage = shop.logoImage,
+               logoImage != "https://imgfp.hotp.jp/SYS/cmn/images/common/diary/custom/m30_img_noimage.gif",
+                let url = URL(string: logoImage) {
                 WebImage(url: url)
                     .placeholder {
                         shop.genre.image
@@ -67,6 +65,12 @@ extension NearbyRestaurantSheetView {
                     .frame(width: 50, height: 50)
                     .cornerRadius(8)
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
+            }else{
+                shop.genre.image
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width:50,height:50)
+                    .cornerRadius(10)
             }
 
             VStack(alignment: .leading, spacing: 4) {

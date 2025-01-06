@@ -74,18 +74,29 @@ struct AIReviewSheet: View {
         NavigationStack{
             ScrollView{
                 messageBubble(message: "私の言葉全部信用しちゃ、ダメだよ！！")
-                messageBubble(message: vm.displayedText)
-                    .alert(isPresented: $vm.showAlert) {
-                        Alert(
-                            title: Text("エラー"),
-                            message: Text(vm.alertMessage),
-                            dismissButton: .cancel()
-                        )
-                    }
-                    .onAppear {
-                        vm.makeRequest(request: request)
-                    }
+                
+                if !vm.displayedText.isEmpty{
+                    messageBubble(message: vm.displayedText)
+                        .transition(.slide)
+                        .animation(.spring, value: vm.displayedText.isEmpty)
+                }else{
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                        .frame(width:55)
+                }
+                
             }
+            .alert(isPresented: $vm.showAlert) {
+                Alert(
+                    title: Text("エラー"),
+                    message: Text(vm.alertMessage),
+                    dismissButton: .cancel()
+                )
+            }
+            .onAppear {
+                vm.makeRequest(request: request)
+            }
+
             .navigationTitle("チャットアウンくん！！")
         }
     }
