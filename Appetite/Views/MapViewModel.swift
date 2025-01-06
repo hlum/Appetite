@@ -161,13 +161,13 @@ extension MapViewModel{
     
     func searchRestaurantsWithSelectedFilters(
         keyword:String? = nil,
-        budgets selectedBudgets:[Budgets],
-        genres selectedGeneres:[Genres],
+        budgets selectedBudgets:[BudgetFilterModel],
+        genres selectedGeneres:[Genre],
         selectedSpecialCategories:[SpecialCategory],
         selectedSpecialCategory2:[SpecialCategory2]
     ){
         showSearchedRestaurants = !(filterManager?.selectedGenres.isEmpty ?? true &&
-                                    filterManager?.selectedBudgets.isEmpty ?? true &&
+                                    filterManager?.selectedBudgetFilterModels.isEmpty ?? true &&
                                     filterManager?.selectedSpecialCategory.isEmpty ?? true &&
                                     filterManager?.selectedSpecialCategory2.isEmpty ?? true &&
                                     searchText.isEmpty && !searchSeeingArea)
@@ -253,7 +253,7 @@ extension MapViewModel{
                     //NearbyRestaurantsを取得してからそれ以降　searchTextが空になった時でも検索する
                     if self.fetchedFirstTime{
                         self.searchRestaurantsWithSelectedFilters(
-                            budgets: filterManager.selectedBudgets,
+                            budgets: filterManager.selectedBudgetFilterModels,
                             genres: filterManager.selectedGenres,
                             selectedSpecialCategories: filterManager.selectedSpecialCategory,
                             selectedSpecialCategory2: filterManager.selectedSpecialCategory2
@@ -263,7 +263,7 @@ extension MapViewModel{
                 }
                 self.searchRestaurantsWithSelectedFilters(
                     keyword: searchText,
-                    budgets: filterManager.selectedBudgets,
+                    budgets: filterManager.selectedBudgetFilterModels,
                     genres: filterManager.selectedGenres,
                     selectedSpecialCategories: filterManager.selectedSpecialCategory,
                     selectedSpecialCategory2: filterManager.selectedSpecialCategory2

@@ -7,30 +7,26 @@
 
 import Foundation
 
-enum SpecialCategory: String,FilterItemProtocol {
-    static var filterType: FilterType = .specialCategory
+struct SpecialCategoryResponse:Codable{
+    let results:SpecialCategoryResults
+}
+
+struct SpecialCategoryResults: Codable {
+    let specials: [SpecialCategory]
     
-    case LT0089 = "食べ放題プランのあるお店"
-    case LT0090 = "コースじゃなくても飲み放題OKなお店"
-    case LU0017 = "食事メインで楽しめるお店"
-    case LU0011 = "雰囲気がいいBAR"
-    case LZ0001 = "サムギョプサル、サムゲタン…美味しい韓国料理を味わう！"
-    case LZ0002 = "おいしく飲んで食べられるバル・ビストロ"
-    case LU0051 = "梅酒・果実酒・カクテルの種類が豊富なお店"
-    case LU0053 = "郷土料理・ご当地メニュー！"
-    case LY0090 = "話題のB級グルメを味わう"
-    case LU0055 = "地鶏・焼き鳥・焼きとんを食べたい！"
-    case LZ0005 = "中華・アジアン・各国料理"
-    case LZ0028 = "ハッピーアワーでオトクに楽しむ"
-    case LZ0029 = "こだわりの絶品ラーメンのあるお店"
-    
-    var name:String{
-        self.rawValue
+    enum CodingKeys: String, CodingKey {
+        case specials = "special"
     }
+}
+
+struct SpecialCategory:FilterItemProtocol, Codable {
+    static var filterType: FilterType = .specialCategory
+    let id:UUID = UUID()
+    let code: String
+    let name: String
     
-    var code:String{
-        String(describing: self)
+    static func ==(lhs: SpecialCategory, rhs: SpecialCategory) -> Bool {
+        return lhs.code == rhs.code
     }
 
 }
-

@@ -7,28 +7,25 @@
 
 import Foundation
 
-enum SpecialCategory2: String,FilterItemProtocol {
+struct SpecialCategory2Response:Codable{
+    let results:SpecialCategory2Results
+}
+struct SpecialCategory2Results: Codable {
+    let specialCategories: [SpecialCategory2]
+    
+    enum CodingKeys: String, CodingKey {
+        case specialCategories = "special_category"
+    }
+}
+
+struct SpecialCategory2: Codable,FilterItemProtocol {
     static var filterType: FilterType = .specialCategory2
+    let id:UUID = UUID()
+    let code: String
+    let name: String
     
-    case SPD8 = "ランチを楽しむ"
-    case SPF9 = "大人なグルメ"
-    case SPG1 = "デートにぴったり"
-    case SPF8 = "おすすめコース"
-    case SPG7 = "こだわり食材"
-    case SPG8 = "旬の料理を楽しむ"
-    case SPF7 = "飲み放題付コース"
-    case SPG3 = "ママにもやさしい"
-    case SPG4 = "個室・貸切・設備で探す"
-    case SPG5 = "特別シーンなら"
-    case SPG2 = "女性に嬉しい"
-    case SPG6 = "定番おすすめ"
-    case SPG9 = "季節のイベント"
-    
-    var name: String {
-        return self.rawValue
+    static func ==(lhs: SpecialCategory2, rhs: SpecialCategory2) -> Bool {
+        return lhs.code == rhs.code
     }
 
-    var code: String {
-        return String(describing: self)
-    }
 }
