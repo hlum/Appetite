@@ -48,7 +48,9 @@ struct NearbyRestaurantSheetView: View {
 extension NearbyRestaurantSheetView {
     private func listItemView(for shop: Shop) -> some View {
         HStack(alignment: .top, spacing: 12) {
-            if let logoImage = shop.logoImage, let url = URL(string: logoImage) {
+            if let logoImage = shop.logoImage,
+               logoImage != "https://imgfp.hotp.jp/SYS/cmn/images/common/diary/custom/m30_img_noimage.gif",
+                let url = URL(string: logoImage) {
                 WebImage(url: url)
                     .placeholder {
                         shop.genre.image
@@ -63,6 +65,12 @@ extension NearbyRestaurantSheetView {
                     .frame(width: 50, height: 50)
                     .cornerRadius(8)
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
+            }else{
+                shop.genre.image
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width:50,height:50)
+                    .cornerRadius(10)
             }
 
             VStack(alignment: .leading, spacing: 4) {
