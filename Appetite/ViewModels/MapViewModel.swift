@@ -23,8 +23,8 @@ final class MapViewModel:ObservableObject{
     @Published var alertMessage:String = ""
     
     @Published var searchText:String = ""
-    @Published var progress:Double = 0.1
-
+    @Published var stillLoading:Bool = false
+    
     @Published var showSearchedRestaurants: Bool = false
     @Published var selectedRestaurant:Shop? = nil
     @Published var nearbyRestaurants:[Shop] = []
@@ -34,7 +34,7 @@ final class MapViewModel:ObservableObject{
     @Published var transportType:MKDirectionsTransportType = .automobile
     @Published var availableRoutes:[MKRoute] = []
     @Published var selectedRoute:MKRoute? = nil
-        
+    
     
     //OBJECTS
     weak var filterManager:FilterManager?
@@ -47,7 +47,7 @@ final class MapViewModel:ObservableObject{
     @Published var userLocation:CLLocationCoordinate2D?
     @Published var currentSeeingRegionCenterCoordinate:CLLocationCoordinate2D?
     var currentSeeingRegionSpan:MKCoordinateSpan = MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-
+    
     
     
     @Published var fetchedFirstTime:Bool = false//FLAG
@@ -58,9 +58,9 @@ final class MapViewModel:ObservableObject{
         self.filterManager = filterManager
         getUserLocationAndNearbyRestaurants()
         self.addSubscriberToSearchText()  //検索バーを検知する
-
+        
     }
-
+    
     deinit{
         locationManager.onLocationUpdate = nil
         cancellables.removeAll()
@@ -69,7 +69,7 @@ final class MapViewModel:ObservableObject{
     func setUp(_ filterManager:FilterManager){//passed the environment object from the view
         self.filterManager = filterManager
     }
-      
+    
     
     private func checkForCustomError(error:Error){
         if let customError = error as? CustomErrors{
@@ -87,6 +87,12 @@ final class MapViewModel:ObservableObject{
                 self.alertMessage = message
             }
             print("Alert state: \(self.showAlert)")
+        }
+    }
+    
+    private func updateLoadingStatus(to stillLoading:Bool){
+        DispatchQueue.main.async{
+            self.stillLoading = stillLoading
         }
     }
     
@@ -109,25 +115,23 @@ final class MapViewModel:ObservableObject{
     
     private func getNearbyRestaurants(at userCoordinate:CLLocationCoordinate2D,count:Int = 100){
         self.apiClient.searchAllShops(lat: userCoordinate.latitude, lon: userCoordinate.longitude,range: 3,maxResults: count) { [weak self] result in
-                switch result{
-                case .completed(let response):
-                    DispatchQueue.main.async {
-                        self?.nearbyRestaurants = response.results.shops
-                        self?.progress = 1.0
-                    }
-                case .progress(let progress):
-                    DispatchQueue.main.async {
-                        self?.progress = progress
-                    }
-                case .error(let error):
-                    DispatchQueue.main.async{
-                        self?.nearbyRestaurants = []
-                        self?.progress = 1.0
-                    }
-                    self?.checkForCustomError(error: error)
-                    print(error.localizedDescription)
+            switch result{
+            case .completed(let response):
+                DispatchQueue.main.async {
+                    self?.nearbyRestaurants = response.results.shops
+                    self?.updateLoadingStatus(to: false)
                 }
+            case .error(let error):
+                DispatchQueue.main.async{
+                    self?.nearbyRestaurants = []
+                    self?.updateLoadingStatus(to: false)
+                }
+                self?.checkForCustomError(error: error)
+                print(error.localizedDescription)
+            case .inProgress:
+                self?.updateLoadingStatus(to: true)
             }
+        }
     }
     
     func moveCamera(to coordinate:CLLocationCoordinate2D,delta:Double = 0.01){
@@ -173,8 +177,8 @@ extension MapViewModel{
                                     searchText.isEmpty && !searchSeeingArea)
         //Queryがkeyword=&genre=.....のようにならないように
         let checkedKeyword: String? = (keyword?.isEmpty == false) ? keyword : nil
-
-            //        showNearbyRestaurantSheet = selectedRestaurant == nil
+        
+        //        showNearbyRestaurantSheet = selectedRestaurant == nil
         let range = calculateRange(for: currentSeeingRegionSpan)
         if let currentSeeingRegion = currentSeeingRegionCenterCoordinate{
             apiClient.searchAllShops(
@@ -196,21 +200,18 @@ extension MapViewModel{
                     DispatchQueue.main.async{
                         withAnimation{
                             self.searchedRestaurants = response.results.shops
-                            self.progress = 1.0
+                            self.stillLoading = false
                         }
                     }
-                case .progress(let progress):
-                    DispatchQueue.main.async{
-                        self.progress = progress
-                    }
+                case .inProgress:
+                    self.updateLoadingStatus(to: true)
                 case .error(let error):
                     DispatchQueue.main.async{
                         self.searchedRestaurants = []
-                        self.progress = 1.0
+                        self.stillLoading = false
                         self.checkForCustomError(error: error)
                     }
                 }
-                
             }
         }else{
             print("no camera position")
@@ -226,12 +227,12 @@ extension MapViewModel{
         print(approximateMeters)
         
         /*
-        1: 300m
-        2: 500m
-        3: 1000m (初期値)
-        4: 2000m
-        5: 3000m
-        */
+         1: 300m
+         2: 500m
+         3: 1000m (初期値)
+         4: 2000m
+         5: 3000m
+         */
         
         switch approximateMeters {
         case 0..<1700:      return 1

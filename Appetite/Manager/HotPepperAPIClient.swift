@@ -8,8 +8,8 @@
 import Foundation
 
 enum SearchProgress{
-    case progress(Double)
     case completed(HotPepperResponse)
+    case inProgress
     case error(Error)
 }
 
@@ -17,12 +17,10 @@ class HotPepperAPIClient: ObservableObject {
     private let baseURL = "https://webservice.recruit.co.jp/hotpepper/gourmet/v1/"
     private let apiKey: String
     private let maxResultsPerPage = 100
-    private var observer:NSKeyValueObservation? = nil
     
-    private var currentProgress: Double = 0.0
     private var totalRequests: Int = 0
     private var completedRequests: Int = 0
-
+    
     
     init(apiKey: String) {
         self.apiKey = apiKey
@@ -51,6 +49,7 @@ class HotPepperAPIClient: ObservableObject {
         maxResults: Int = 100,
         completion: @escaping (SearchProgress) -> Void
     ) {
+        completion(.inProgress)
         //何個まで取得できるかを試す
         searchShops(
             keyword: keyword,
@@ -98,8 +97,8 @@ class HotPepperAPIClient: ObservableObject {
                 )
             case .error(let error):
                 completion(.error(error))
-            case .progress(let progress):
-                completion(.progress(progress))
+            case .inProgress:
+                completion(.inProgress)
             }
         }
     }
@@ -120,14 +119,13 @@ class HotPepperAPIClient: ObservableObject {
         var allShops: [Shop] = []
         completedRequests = 0
         totalRequests = numberOfPages
-        currentProgress = 0.0
         var hasError = false
-
+        
         for page in 0..<numberOfPages {
             let start = page * maxResultsPerPage + 1
             let remainingResults = totalResults - (page * maxResultsPerPage)
             let countForThisPage = min(maxResultsPerPage, remainingResults)
-
+            
             searchShops(
                 keyword: keyword,
                 lat: lat,
@@ -145,7 +143,7 @@ class HotPepperAPIClient: ObservableObject {
                 case .completed(let response):
                     allShops.append(contentsOf: response.results.shops)
                     self.completedRequests += 1
-                    self.updateProgress(completion: completion)
+                    
                     if self.completedRequests == numberOfPages && !hasError {
                         let finalResponse = HotPepperResponse(results: Results(
                             resultsAvailable: totalResults,
@@ -158,19 +156,12 @@ class HotPepperAPIClient: ObservableObject {
                 case .error(let error):
                     hasError = true
                     completion(.error(error))
-                case .progress(let progress):
-                    self.currentProgress += progress / Double(self.totalRequests)
-                    self.updateProgress(completion: completion)
+                case .inProgress:
+                    completion(.inProgress)
                 }
             }
         }
     }
-
-    private func updateProgress(completion: (SearchProgress) -> Void) {
-        let progress = min(currentProgress, 1.0)
-        completion(.progress(progress))
-    }
-
     
     /// Internal search function with start parameter
     private func searchShops(
@@ -231,8 +222,7 @@ class HotPepperAPIClient: ObservableObject {
         
         print("DEBUG url: \(url)")
         
-        observer?.invalidate()
-
+        
         let task = URLSession.shared.dataTask(with: url) {[weak self] data, response, error in
             if let error = error {
                 completion(.error(error))
@@ -253,18 +243,7 @@ class HotPepperAPIClient: ObservableObject {
                 completion(.error(error))
             }
         }
-        
-        self.observer = task.progress.observe(\.fractionCompleted) {[weak self] progress, _ in
-            if progress.fractionCompleted < 1.0 {
-                completion(.progress(progress.fractionCompleted))
-            }
-        }
         task.resume()
-        task.observe(\.state) {[weak self] task, _ in
-            if task.state == .completed || task.state == .suspended || task.state == .canceling{
-                self?.observer?.invalidate()
-            }
-        }
     }
-
+    
 }

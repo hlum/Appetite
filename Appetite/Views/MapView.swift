@@ -86,7 +86,7 @@ extension MapView{
                     restaurantAnnotations(restaurant: restaurant)
                 }
             }
-            .brightness(vm.progress < 1.0 ? -0.3 : 0.0)
+            .brightness(vm.stillLoading ? -0.3 : 0.0)
     //            .brightness(-0.3)
             .onMapCameraChange(frequency: .continuous, {context in
                 vm.currentSeeingRegionSpan = context.region.span
@@ -180,7 +180,7 @@ extension MapView{
             
             previewsStack
 
-            if vm.progress < 1.0{
+            if vm.stillLoading{
                 VStack{
                     LottieView(name: "LoadingAnimation", loopMode: .loop, labelText: nil)
                         .frame(height:300)
