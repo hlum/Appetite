@@ -58,7 +58,6 @@ final class MapViewModel:ObservableObject{
         self.filterManager = filterManager
         getUserLocationAndNearbyRestaurants()
         self.addSubscriberToSearchText()  //検索バーを検知する
-        
     }
     
     deinit{
@@ -118,8 +117,10 @@ final class MapViewModel:ObservableObject{
             switch result{
             case .completed(let response):
                 DispatchQueue.main.async {
-                    self?.nearbyRestaurants = response.results.shops
-                    self?.updateLoadingStatus(to: false)
+                    withAnimation(.easeInOut){
+                        self?.nearbyRestaurants = response.results.shops
+                        self?.updateLoadingStatus(to: false)
+                    }
                 }
             case .error(let error):
                 DispatchQueue.main.async{
@@ -175,10 +176,12 @@ extension MapViewModel{
                                     filterManager?.selectedSpecialCategory.isEmpty ?? true &&
                                     filterManager?.selectedSpecialCategory2.isEmpty ?? true &&
                                     searchText.isEmpty && !searchSeeingArea)
+        
+        nearbyRestaurants = []
         //Queryがkeyword=&genre=.....のようにならないように
         let checkedKeyword: String? = (keyword?.isEmpty == false) ? keyword : nil
         
-        //        showNearbyRestaurantSheet = selectedRestaurant == nil
+        //showNearbyRestaurantSheet = selectedRestaurant == nil
         let range = calculateRange(for: currentSeeingRegionSpan)
         if let currentSeeingRegion = currentSeeingRegionCenterCoordinate{
             apiClient.searchAllShops(
@@ -246,22 +249,12 @@ extension MapViewModel{
     
     private func addSubscriberToSearchText(){
         $searchText
+            .dropFirst()  // 最初の　""　はSkipする
             .debounce(for: 1, scheduler: DispatchQueue.main)
             .sink { [weak self] searchText in
                 guard let self = self else{return}
                 guard let filterManager = self.filterManager else{return}
-                guard !searchText.isEmpty else{
-                    //NearbyRestaurantsを取得してからそれ以降　searchTextが空になった時でも検索する
-                    if self.fetchedFirstTime{
-                        self.searchRestaurantsWithSelectedFilters(
-                            budgets: filterManager.selectedBudgetFilterModels,
-                            genres: filterManager.selectedGenres,
-                            selectedSpecialCategories: filterManager.selectedSpecialCategory,
-                            selectedSpecialCategory2: filterManager.selectedSpecialCategory2
-                        )
-                    }
-                    return
-                }
+                print("called")
                 self.searchRestaurantsWithSelectedFilters(
                     keyword: searchText,
                     budgets: filterManager.selectedBudgetFilterModels,

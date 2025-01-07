@@ -41,6 +41,7 @@ final class FilterManager:ObservableObject{
     
     private func setFilterChangeListener(){
         Publishers.CombineLatest4($selectedGenres, $selectedBudgetFilterModels,$selectedSpecialCategory,$selectedSpecialCategory2)
+            .dropFirst()
             .debounce(for: 0.5, scheduler: DispatchQueue.main)//API　CALL　を減らすため０.５秒待たせる
             .map{genres,budgets,specialCategory,specialCategory2 in
                 !genres.isEmpty || !budgets.isEmpty || !specialCategory.isEmpty || !specialCategory2.isEmpty

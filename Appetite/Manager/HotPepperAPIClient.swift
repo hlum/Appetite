@@ -50,6 +50,25 @@ class HotPepperAPIClient: ObservableObject {
         completion: @escaping (SearchProgress) -> Void
     ) {
         completion(.inProgress)
+        
+        //デフォルトで１００個まで検索したい場合
+        guard maxResults > 100 else{
+            searchShops(
+                keyword: keyword,
+                lat: lat,
+                lon: lon,
+                range: range,
+                genres: genres,
+                budgets: budgets,
+                specialCategories: specialCategories,
+                specialCategories2:specialCategories2,
+                start: 1,
+                count: 100,
+                completion: completion
+            )
+            return
+        }
+        //100個以上検索したい場合
         //何個まで取得できるかを試す
         searchShops(
             keyword: keyword,
