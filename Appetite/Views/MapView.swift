@@ -21,7 +21,7 @@ struct MapView: View {
     @State var previewDragOffset:CGSize = .zero
     @State var showProgressView:Bool = false
     @State var cameraPositionChanged = false
-    @EnvironmentObject var filterManager:FilterManger
+    @EnvironmentObject var filterManager:FilterManager
     @State var showMapStyleMenu:Bool = false
     @AppStorage("mapStyle") var mapStyle:MapStyleCases = .hybrid
     //temp,onAppearでfilterManagerを渡す
@@ -858,12 +858,12 @@ extension MapView{
 
 #Preview {
     MapView()
-        .environmentObject(FilterManger())
+        .environmentObject(FilterManager())
 
 }
 #Preview {
     MapView()
-        .environmentObject(FilterManger())
+        .environmentObject(FilterManager())
         .colorScheme(.dark)
 }
 

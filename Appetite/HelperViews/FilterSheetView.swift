@@ -10,7 +10,7 @@ import SwiftUI
 struct FilterSheetView: View {
     @State var showAlert:Bool = false
     @State var alertMessage :String = ""
-    @EnvironmentObject var filterManager: FilterManger
+    @EnvironmentObject var filterManager: FilterManager
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
@@ -119,7 +119,7 @@ struct FilterSheetView: View {
 
 
 struct FilterGroupView<T: FilterItemProtocol>: View {
-    @EnvironmentObject var filterManager:FilterManger
+    @EnvironmentObject var filterManager:FilterManager
     let title: String
     let items: [T]
     private let columns = [
@@ -193,6 +193,6 @@ extension FilterGroupView{
 
 #Preview {
     FilterSheetView()
-        .environmentObject(FilterManger())
+        .environmentObject(FilterManager())
         .colorScheme(.light)
 }

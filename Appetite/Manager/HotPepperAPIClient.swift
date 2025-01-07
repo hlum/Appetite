@@ -36,7 +36,7 @@ class HotPepperAPIClient: ObservableObject {
     ///   - range: 検索範囲
     ///   - genres: ジャンルコード配列
     ///   - budgets: 予算コード配列
-    ///   - maxResults: 取得する最大件数 (nilの場合は全件取得)
+    ///   - maxResults: 取得する最大件数 (デフォルト：１００)
     ///   - completion: 検索結果を含むレスポンス
     ///
     func searchAllShops(
@@ -51,7 +51,7 @@ class HotPepperAPIClient: ObservableObject {
         maxResults: Int = 100,
         completion: @escaping (SearchProgress) -> Void
     ) {
-        // First, get total available results count
+        //何個まで取得できるかを試す
         searchShops(
             keyword: keyword,
             lat: lat,
@@ -81,7 +81,7 @@ class HotPepperAPIClient: ObservableObject {
                     ))
                     completion(.completed(noResultResponse))
                 }
-                // If maxResults is less than available results, use that instead
+                // 取得可能な数　と　取得したい数　から小さい方をとる
                 totalResults = min(totalResults, maxResults)
                 
                 

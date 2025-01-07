@@ -18,10 +18,6 @@ final class MapViewModel:ObservableObject{
     @Published var availableRoutes:[MKRoute] = []
     @Published var selectedRoute:MKRoute? = nil
     @Published var showRoutesSheet:Bool = false
-    
-    //Updating Route
-    @Published var lastDirectionUpdateTime:Date?
-    private let minTimeBetweenRoutesUpdates:TimeInterval = 5.0
         
     @Published var showDetailSheetView:Bool = false
     @Published var showAlert:Bool = false
@@ -33,7 +29,7 @@ final class MapViewModel:ObservableObject{
     
     var searchSeeingArea : Bool = false
     @Published var showFilterSheet:Bool = false
-    weak var filterManager:FilterManger?
+    weak var filterManager:FilterManager?
     @Published var selectedRestaurant:Shop? = nil
     @Published var showNearbyRestaurantSheet:Bool = true
     @Published var searchText:String = ""
@@ -51,7 +47,7 @@ final class MapViewModel:ObservableObject{
     
     @Published var showSearchedRestaurants: Bool = false
     
-    init(filterManager:FilterManger?){
+    init(filterManager:FilterManager?){
         self.apiClient = HotPepperAPIClient(apiKey: APIKEY.hotpepperApiKey.rawValue)
         self.filterManager = filterManager
         getUserLocationAndNearbyRestaurants()
@@ -66,7 +62,7 @@ final class MapViewModel:ObservableObject{
         cancellables.removeAll()
     }
     
-    func setUp(_ filterManager:FilterManger){//passed the environment object from the view
+    func setUp(_ filterManager:FilterManager){//passed the environment object from the view
         self.filterManager = filterManager
     }
       
@@ -347,32 +343,13 @@ extension MapViewModel{
         }
     }
     
-    //UserLocationが更新され、ある時間経ったらルートを更新する
     func updateRoute(){
-        NotificationCenter.default
-            .addObserver(
-                forName: Notification.Name("UserLocationUpdated"),
-                object: nil,
-                queue: .main) {[weak self] _ in
-                    if self?.selectedRoute != nil{//案内中
-                        self?.checkAndUpdateRoute()
-                    }
-                }
-    }
-    
-    //指定した時間たったかチェックして　ルートを更新する
-    private func checkAndUpdateRoute(){
-        guard let lastDirectionUpdateTime = lastDirectionUpdateTime else{
-            //first Update
-            self.lastDirectionUpdateTime = Date()
-            return
-        }
-        
-        let timeSinceLastUpdate = Date().timeIntervalSince(lastDirectionUpdateTime)
-        
-        if timeSinceLastUpdate > minTimeBetweenRoutesUpdates{
-            getRouteUpdate()
-            self.lastDirectionUpdateTime = Date()
+        //5m移動したら
+        locationManager.onLocationUpdate = {[weak self] _ in
+            if let userLocation = self?.userLocation{
+                self?.moveCamera(to: userLocation)
+            }
+            self?.updateRoute()
         }
     }
     

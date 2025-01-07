@@ -16,6 +16,8 @@ final class LocationManager:NSObject,CLLocationManagerDelegate{
         super.init()
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest // Use best available accuracy
+        locationManager.distanceFilter = 5; // 位置情報取得間隔を指定(5m移動したら、位置情報を通知)
+
         setup()
     }
     
@@ -46,16 +48,20 @@ final class LocationManager:NSObject,CLLocationManagerDelegate{
         checkLocationAuthorization()
     }
     
+    //5m移動したら呼ばれる
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let newLocation = locations.last else { return }
         NotificationCenter.default.post(name: Notification.Name("UserLocationUpdated"), object: nil) // ユーザーの一致が変わったらルートを更新するため
         
         let howRecent = newLocation.timestamp.timeIntervalSinceNow
-        guard abs(howRecent) < 15.0, // Location should be from last 15 seconds
-              newLocation.horizontalAccuracy < 100.0, // Accuracy within 100 meters
-              newLocation.coordinate.latitude != 0.0, // Not at null island
+        // 15秒以上経過したデータは破棄する
+        //(最初の画面でキャッシュされている位置情報でレストランを検索されてしまうと検索結果がないBugが出ます。）
+        guard abs(howRecent) < 15.0,
+              // 垂直精度が半径100m以下のみ、有効な位置情報として扱う
+              newLocation.horizontalAccuracy < 100,
+              
+              newLocation.coordinate.latitude != 0.0,
               newLocation.coordinate.longitude != 0.0 else {
-            // Location is not good enough yet, wait for a better one
             return
         }
         onLocationUpdate?(.success(newLocation.coordinate))

@@ -10,7 +10,7 @@ import SwiftUI
 struct FilterSection<T:FilterItemProtocol>:View{
     let title:String
     let items:[T]
-    @EnvironmentObject var filterManager:FilterManger
+    @EnvironmentObject var filterManager:FilterManager
     let columns = [
         GridItem(.adaptive(minimum: 120, maximum: 130), spacing: 10)
     ]
@@ -88,5 +88,5 @@ extension FilterSection{
 
 #Preview {
     FilterSheetView()
-        .environmentObject(FilterManger())
+        .environmentObject(FilterManager())
 }

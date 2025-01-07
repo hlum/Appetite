@@ -28,7 +28,7 @@ struct BudgetFilterModel:FilterItemProtocol,Codable{
     let name : String
     
     static func ==(lhs: BudgetFilterModel, rhs: BudgetFilterModel) -> Bool {
-        return lhs.code == rhs.code
+        return lhs.id == rhs.id
     }
 
 }

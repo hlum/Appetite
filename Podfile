@@ -1,4 +1,4 @@
-platform :ios, '13.0'
+platform :ios, '17.0'
 
 target 'Appetite' do
   use_frameworks!  # Add this for Swift projects

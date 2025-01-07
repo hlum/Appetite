@@ -8,7 +8,7 @@
 import Foundation
 import Combine
 
-final class FilterManger:ObservableObject{
+final class FilterManager:ObservableObject{
     @Published var selectedGenres:[Genre] = []
     @Published var selectedBudgetFilterModels:[BudgetFilterModel] = []
     @Published var selectedSpecialCategory:[SpecialCategory] = []
