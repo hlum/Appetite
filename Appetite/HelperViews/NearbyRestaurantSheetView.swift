@@ -128,18 +128,46 @@ extension NearbyRestaurantSheetView {
                     address: "東京都新宿区百人町１-21-4",
                     lat: 35.6895,
                     lon: 139.6917,
-                    genre: Genre(code: "1", name: "居酒屋"), subGenre: SubGenre(name: "ダイニングバー", code: "fadsf"),
+                    genre: Genre(
+                        code: "1",
+                        name: "居酒屋"
+                    ),
+                    subGenre: SubGenre(
+                        name: "ダイニングバー",
+                        code: "fadsf"
+                    ),
                     access: "2 mins from Station",
-                    urls: URLs(pc: "https://example.com"),
-                    photo: Photo(pc: PCPhoto(l: "large_url", m: "medium_url", s: "small_url"), mobile: MobilePhoto(l: "large", s: "small")), catchPharse: "afd",
+                    urls: URLs(
+                        pc: "https://example.com"
+                    ),
+                    photo: Photo(
+                        pc: PCPhoto(
+                            l: "large_url",
+                            m: "medium_url",
+                            s: "small_url"
+                        ),
+                        mobile: MobilePhoto(
+                            l: "large",
+                            s: "small"
+                        )
+                    ),
+                    catchPharse: "afd",
                     logoImage: "logoA.png",
-                    nameKana: "レストラン A",
                     stationName: "Station A",
                     ktaiCoupon: 10,
-                    budget: Budget(code: "1", name: "Affordable", average: "ランチ：～999円、ディナー：3000円～4000円", budgetMemo: "Reasonable"), partyCapacity: .string("10"),
-                    capacity: .integer(10),
+                    budget: Budget(
+                        code: "1",
+                        name: "Affordable",
+                        average: "ランチ：～999円、ディナー：3000円～4000円",
+                        budgetMemo: "Reasonable"
+                    ),
+                    partyCapacity: .string(
+                        "10"
+                    ),
+                    capacity: .integer(
+                        10
+                    ),
                     wifi: "Available",
-                    course: "Yes",
                     freeDrink: "No",
                     freeFood: "Yes",
                     privateRoom: "Yes",

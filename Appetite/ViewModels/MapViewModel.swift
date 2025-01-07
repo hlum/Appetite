@@ -11,50 +11,54 @@ import SwiftUI
 import Combine
 
 final class MapViewModel:ObservableObject{
+    //UI STUFFS
     @Published var showAiResultSheet:Bool = false
+    @Published var showNearbyRestaurantSheet:Bool = true
+    @Published var showRoutesSheet:Bool = false
+    @Published var showFilterSheet:Bool = false
+    @Published var showDetailSheetView:Bool = false
+    
+    @Published var showLocationPermissionAlert:Bool = false
+    @Published var showAlert:Bool = false
+    @Published var alertMessage:String = ""
+    
+    @Published var searchText:String = ""
+    @Published var progress:Double = 0.1
+
+    @Published var showSearchedRestaurants: Bool = false
+    @Published var selectedRestaurant:Shop? = nil
+    @Published var nearbyRestaurants:[Shop] = []
+    @Published var searchedRestaurants:[Shop] = []
     
     //ROUTES STUFFS
     @Published var transportType:MKDirectionsTransportType = .automobile
     @Published var availableRoutes:[MKRoute] = []
     @Published var selectedRoute:MKRoute? = nil
-    @Published var showRoutesSheet:Bool = false
         
-    @Published var showDetailSheetView:Bool = false
-    @Published var showAlert:Bool = false
-    @Published var alertMessage:String = ""
     
-    @Published var progress:Double = 0.1
-    
-    private let apiClient:HotPepperAPIClient
-    
-    var searchSeeingArea : Bool = false
-    @Published var showFilterSheet:Bool = false
+    //OBJECTS
     weak var filterManager:FilterManager?
-    @Published var selectedRestaurant:Shop? = nil
-    @Published var showNearbyRestaurantSheet:Bool = true
-    @Published var searchText:String = ""
+    private let apiClient:HotPepperAPIClient
     let locationManager = LocationManager()
-    @Published var nearbyRestaurants:[Shop] = []
-    @Published var showLocationPermissionAlert:Bool = false
+    
+    //LOCATION STUFFS
+    var searchSeeingArea : Bool = false
     @Published var cameraPosition:MapCameraPosition = .automatic
     @Published var userLocation:CLLocationCoordinate2D?
     @Published var currentSeeingRegionCenterCoordinate:CLLocationCoordinate2D?
     var currentSeeingRegionSpan:MKCoordinateSpan = MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-    @Published var fetchedFirstTime:Bool = false
-    private var cancellables = Set<AnyCancellable>()
 
-    @Published var searchedRestaurants:[Shop] = []
     
-    @Published var showSearchedRestaurants: Bool = false
+    
+    @Published var fetchedFirstTime:Bool = false//FLAG
+    private var cancellables = Set<AnyCancellable>()
     
     init(filterManager:FilterManager?){
         self.apiClient = HotPepperAPIClient(apiKey: APIKEY.hotpepperApiKey.rawValue)
         self.filterManager = filterManager
         getUserLocationAndNearbyRestaurants()
-        //NearbyRestaurantsを待つ
-        DispatchQueue.main.asyncAfter(deadline: .now()+3){
-            self.addSubscriberToSearchText()  //検索バーを検知する
-        }
+        self.addSubscriberToSearchText()  //検索バーを検知する
+
     }
 
     deinit{

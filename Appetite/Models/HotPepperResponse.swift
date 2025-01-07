@@ -13,14 +13,12 @@ struct HotPepperResponse: Codable {
 }
 
 struct Results: Codable {
-    let apiVersion: String
     let resultsAvailable: Int?
     let resultsReturned: String?
     let resultsStart: Int?
     let shops: [Shop]
     
     enum CodingKeys: String, CodingKey {
-        case apiVersion = "api_version"
         case resultsAvailable = "results_available"
         case resultsReturned = "results_returned"
         case resultsStart = "results_start"
@@ -46,14 +44,12 @@ struct Shop: Codable,Identifiable,Equatable {
     let catchPharse:String
     
     let logoImage: String?
-    let nameKana: String?
     let stationName: String?
     let ktaiCoupon: Int?
     let budget: Budget?
     let partyCapacity:PartyCapacity?
     let capacity: Capacity?
     let wifi: String?
-    let course: String?
     let freeDrink: String?
     let freeFood: String?
     let privateRoom: String?
@@ -64,20 +60,16 @@ struct Shop: Codable,Identifiable,Equatable {
     let card: String?
     
     enum CodingKeys: String, CodingKey {
-        case id, name, address, lat, genre, access, urls, photo
+        case id, name, address, lat, genre, access, urls, photo,budget, capacity, wifi,card,open, close, parking
         case lon = "lng"
         case partyCapacity = "party_capacity"
         case logoImage = "logo_image"
-        case nameKana = "name_kana"
         case stationName = "station_name"
         case ktaiCoupon = "ktai_coupon"
-        case budget, capacity, wifi, course
         case freeDrink = "free_drink"
         case freeFood = "free_food"
         case privateRoom = "private_room"
-        case open, close, parking
         case nonSmoking = "non_smoking"
-        case card
         case subGenre = "sub_genre"
         case catchPharse = "catch"
     }

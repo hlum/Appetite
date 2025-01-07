@@ -73,7 +73,6 @@ class HotPepperAPIClient: ObservableObject {
                 
                 if totalResults == 0{
                     let noResultResponse = HotPepperResponse(results: Results(
-                        apiVersion: "1.26",
                         resultsAvailable: 0,
                         resultsReturned: "0",
                         resultsStart: 1,
@@ -149,7 +148,6 @@ class HotPepperAPIClient: ObservableObject {
                     self.updateProgress(completion: completion)
                     if self.completedRequests == numberOfPages && !hasError {
                         let finalResponse = HotPepperResponse(results: Results(
-                            apiVersion: "1.26",
                             resultsAvailable: totalResults,
                             resultsReturned: String(allShops.count),
                             resultsStart: 1,
