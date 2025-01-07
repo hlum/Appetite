@@ -14,28 +14,32 @@ struct DetailSheetView: View {
     let shop: Shop
     @Binding var showRoutesSheet:Bool
     var body: some View {
-            NavigationStack{
-                ZStack{
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 16) {
-                           shopHeaderDetails
-                            
-                           photoSection
-                            
-                            Label("営業時間", systemImage: "clock")
-                                .bold()
-                            Text(formatOperatingHours(shop.open))
-                            
-                            detailCardView
+        NavigationStack{
+            ZStack{
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        shopHeaderDetails
+                        
+                        photoSection
+                        
+                        Label("営業時間", systemImage: "clock")
+                            .bold()
+                        Text(formatOperatingHours(shop.open))
+                        
+                        detailCardView
                             .padding(.bottom,70)//経路Buttonのためスペース
-                        }
-                        .padding(.horizontal)
                     }
-                    directionButton
-                        .navigationTitle(shop.name)
+                    .padding(.horizontal)
                 }
+                directionButton
+                    .navigationTitle(shop.name)
             }
+        }
     }
+}
+
+//UI
+extension DetailSheetView{
     
     private var shopHeaderDetails:some View{
         VStack(alignment:.leading){
@@ -44,8 +48,6 @@ struct DetailSheetView: View {
                     .font(.title3)
                     .bold()
             }
-            
-            
             
             Text(shop.address)
                 .font(.subheadline)
@@ -148,6 +150,10 @@ struct DetailSheetView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity,alignment: .top)
         .padding(.vertical, 5)
     }
+}
+
+//FORMATTING
+extension DetailSheetView{
     
     private func formatOperatingHours(_ rawString: String?) -> String {
         guard let rawString = rawString,
@@ -164,6 +170,7 @@ struct DetailSheetView: View {
         print(rawString)
         return formattedString
     }
+    
     private func formatBudgetString(_ rawString:String?) -> String{
         guard let rawString = rawString,
               !rawString.isEmpty else{
@@ -175,7 +182,6 @@ struct DetailSheetView: View {
         
         return formattedString
     }
-    
 }
 
 #Preview {

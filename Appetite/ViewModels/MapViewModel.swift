@@ -291,8 +291,7 @@ extension MapViewModel{
         request.source = MKMapItem(placemark: MKPlacemark(coordinate: userLocation))
         request.destination = MKMapItem(placemark: MKPlacemark(coordinate: destinationCoordinate))
         request.transportType = transportType
-        request.requestsAlternateRoutes = true // Request multiple routes
-        
+        request.requestsAlternateRoutes = true // 複数ルート取得
         Task{
             do{
                 let directions = MKDirections(request: request)
@@ -348,13 +347,12 @@ extension MapViewModel{
     }
     
     func updateRoute(){
-        //5m移動したら
+        //10m移動したら
         locationManager.onLocationUpdate = {[weak self] _ in
             if let userLocation = self?.userLocation{
                 self?.moveCamera(to: userLocation)
             }
-            self?.updateRoute()
+            self?.getRouteUpdate()
         }
     }
-    
 }

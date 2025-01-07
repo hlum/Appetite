@@ -19,32 +19,36 @@ struct FilterSection<T:FilterItemProtocol>:View{
             ScrollView(.horizontal,showsIndicators: false) {
                 LazyHStack{
                     ForEach(items, id: \.self) { item in
-                        Button {
-                            handleFilterButtonPressed(for:item)
-                        }label: {
-                            Text(item.name)
-                                .lineLimit(1)
-                                .font(.caption2)
-                                .padding()
-                                .background(isSelected(item) ? .systemBlack : .systemWhite)
-                                .foregroundStyle(isSelected(item) ? .systemWhite : .systemBlack)
-                                .cornerRadius(20)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 20)
-                                        .stroke(Color.systemBlack, lineWidth: isSelected(item) ? 0 : 1)
-                                )
-                        }
+                        filterButton(for:item)
                     }
                 }
                 .frame(height:60)
             }
-            
-
         }header: {
             Text(title)
                 .font(.title2)
                 .foregroundStyle(Color.systemBlack)
                 .frame(maxWidth: .infinity,alignment:.leading)
+        }
+    }
+}
+
+extension FilterSection{
+    private func filterButton(for item:T)->some View{
+        Button {
+            handleFilterButtonPressed(for:item)
+        }label: {
+            Text(item.name)
+                .lineLimit(1)
+                .font(.caption2)
+                .padding()
+                .background(isSelected(item) ? .systemBlack : .systemWhite)
+                .foregroundStyle(isSelected(item) ? .systemWhite : .systemBlack)
+                .cornerRadius(20)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.systemBlack, lineWidth: isSelected(item) ? 0 : 1)
+                )
         }
     }
 }

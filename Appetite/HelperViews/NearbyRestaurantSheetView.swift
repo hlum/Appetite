@@ -48,9 +48,33 @@ struct NearbyRestaurantSheetView: View {
 extension NearbyRestaurantSheetView {
     private func listItemView(for shop: Shop) -> some View {
         HStack(alignment: .top, spacing: 12) {
+            logoImage(for:shop)
+
+            VStack(alignment: .leading, spacing: 4) {
+                nameAndAdress(for: shop)
+                HStack {
+                    partyCapacity(for: shop)
+                }
+
+                cardInfo(for: shop)
+            }
+            .padding(.vertical, 4)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemBackground))
+                .shadow(color: Color.systemBlack.opacity(0.1), radius: 4, x: 0, y: 2)
+        )
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+    
+    private func logoImage(for shop:Shop)->some View{
+        VStack{
             if let logoImage = shop.logoImage,
                logoImage != "https://imgfp.hotp.jp/SYS/cmn/images/common/diary/custom/m30_img_noimage.gif",
-                let url = URL(string: logoImage) {
+               let url = URL(string: logoImage) {
                 WebImage(url: url)
                     .placeholder {
                         shop.genre.image
@@ -72,50 +96,49 @@ extension NearbyRestaurantSheetView {
                     .frame(width:50,height:50)
                     .cornerRadius(10)
             }
+        }
+    }
+    
+    private func nameAndAdress(for shop:Shop)->some View{
+        VStack{
+            Text(shop.name)
+                .font(.headline)
+                .fontWeight(.semibold)
+                .lineLimit(1)
+                .truncationMode(.tail)
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(shop.name)
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-
-                Text(shop.address)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .lineLimit(2)
-                    .truncationMode(.tail)
-
+            Text(shop.address)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .lineLimit(2)
+                .truncationMode(.tail)
+        }
+    }
+    
+    private func partyCapacity(for shop : Shop)-> some View{
+        HStack{
+            Image(systemName:"person.2")
+                .font(.footnote)
+                .foregroundColor(.secondary)
+            Text("宴会収容人数: \(shop.partyCapacity?.displayValue ?? "不明")")
+                .font(.footnote)
+                .foregroundColor(.primary)
+        }
+    }
+    
+    private func cardInfo(for shop : Shop)-> some View{
+        VStack{
+            if let cardInfo = shop.card, !cardInfo.isEmpty {
                 HStack {
-                    Image(systemName:"person.2")
+                    Image(systemName: "creditcard.fill")
                         .font(.footnote)
                         .foregroundColor(.secondary)
-                    Text("宴会収容人数: \(shop.partyCapacity?.displayValue ?? "不明")")
+                    Text("カード: \(cardInfo)")
                         .font(.footnote)
                         .foregroundColor(.primary)
                 }
-
-                if let cardInfo = shop.card, !cardInfo.isEmpty {
-                    HStack {
-                        Image(systemName: "creditcard.fill")
-                            .font(.footnote)
-                            .foregroundColor(.secondary)
-                        Text("カード: \(cardInfo)")
-                            .font(.footnote)
-                            .foregroundColor(.primary)
-                    }
-                }
             }
-            .padding(.vertical, 4)
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemBackground))
-                .shadow(color: Color.systemBlack.opacity(0.1), radius: 4, x: 0, y: 2)
-        )
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
