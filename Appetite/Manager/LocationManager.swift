@@ -16,7 +16,7 @@ final class LocationManager:NSObject,CLLocationManagerDelegate{
         super.init()
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest // Use best available accuracy
-        locationManager.distanceFilter = 10; // 位置情報取得間隔を指定(10m移動したら、位置情報を通知)
+        locationManager.distanceFilter = 3; // 位置情報取得間隔を指定(3m移動したら、位置情報を通知)
 
         setup()
     }
