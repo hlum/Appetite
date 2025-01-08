@@ -23,7 +23,7 @@ struct MapView: View {
     @State var cameraPositionChanged = false
     @EnvironmentObject var filterManager:FilterManager
     @State var showMapStyleMenu:Bool = false
-    @AppStorage("mapStyle") var mapStyle:MapStyleCases = .hybrid
+    @AppStorage("mapStyle") var mapStyle:MapStyleCases = .standard
     //temp,onAppearでfilterManagerを渡す
     @StateObject var vm:MapViewModel = MapViewModel(filterManager:nil)
     
@@ -99,8 +99,8 @@ extension MapView{
                 vm.currentSeeingRegionSpan = context.region.span
                 vm.currentSeeingRegionCenterCoordinate = context.camera.centerCoordinate//get the coordinate of the region dragged by user
             })
-            .mapStyle(mapStyle == .hybrid ? .hybrid(elevation:.realistic) : .standard(elevation:.realistic))
-            .sheet(
+            .mapStyle(mapStyle == .hybrid ? .hybrid : .standard)
+                .sheet(
                 isPresented: $vm.showRoutesSheet,
                 content: {
                     RoutesSheetView(
@@ -186,6 +186,7 @@ extension MapView{
                         .frame(height:300)
                 }
             }
+            
             if vm.selectedRestaurant != nil{
                 aiReviewButton
             }
@@ -537,8 +538,10 @@ extension MapView{
     
     private var ToolBar:some View{
         VStack{
-            mapStyleMenuView
-                .padding(.vertical)
+//            if #available(iOS 17.3, *){ //hybrid は　IOS 17.3じゃないと使えないので
+                mapStyleMenuView
+                    .padding(.vertical)
+//            }
             userLocationButton
         }
         .padding(30)

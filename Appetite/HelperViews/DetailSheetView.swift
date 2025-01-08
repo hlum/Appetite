@@ -165,9 +165,8 @@ extension DetailSheetView{
             .replacingOccurrences(of: " ", with: "\n")
             .replacingOccurrences(of: "（", with: "\n",options: .regularExpression)
             .replacingOccurrences(of: "）", with: "",options: .regularExpression)
-            .replacingOccurrences(of: "(L\\.O\\.)", with: "\nラストオーダー", options: .regularExpression)
+            .replacingOccurrences(of: "(L\\.O\\.)", with: "ラストオーダー", options: .regularExpression)
             .replacingOccurrences(of: pattern, with: "$1, ",options: .regularExpression) //12:0013:00 -> 12:00, 13:00
-        print(rawString)
         return formattedString
     }
     

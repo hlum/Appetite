@@ -8,7 +8,7 @@
 import Foundation
 import Combine
 
-final class FilterManager:ObservableObject{
+class FilterManager:ObservableObject{
     @Published var selectedGenres:[Genre] = []
     @Published var selectedBudgetFilterModels:[BudgetFilterModel] = []
     @Published var selectedSpecialCategory:[SpecialCategory] = []
@@ -56,7 +56,9 @@ final class FilterManager:ObservableObject{
         fetchData(from: "genre", responseType: GenreResponse.self) { result in
             switch result{
             case .success(let results):
-                self.availableGenres = results.results.genres
+                DispatchQueue.main.async {
+                    self.availableGenres = results.results.genres
+                }
             case .failure(let error):
                 print(error.localizedDescription)
             }
@@ -67,7 +69,9 @@ final class FilterManager:ObservableObject{
         fetchData(from: "budget", responseType: BudgetResponse.self) { result in
             switch result{
             case .success(let response):
-                self.availableBudgets = response.results.budgets
+                DispatchQueue.main.async {
+                    self.availableBudgets = response.results.budgets
+                }
             case .failure(let error):
                 print(error.localizedDescription)
             }
@@ -78,7 +82,9 @@ final class FilterManager:ObservableObject{
         fetchData(from: "special", responseType: SpecialCategoryResponse.self) { result in
             switch result{
             case .success(let response):
-                self.availableSpecialCategories = response.results.specials
+                DispatchQueue.main.async {
+                    self.availableSpecialCategories = response.results.specials
+                }
             case .failure(let error):
                 print(error.localizedDescription)
             }
@@ -89,7 +95,9 @@ final class FilterManager:ObservableObject{
         fetchData(from: "special_category", responseType: SpecialCategory2Response.self) { result in
             switch result{
             case .success(let response):
-                self.availableSpecialCategories2 = response.results.specialCategories
+                DispatchQueue.main.async {
+                    self.availableSpecialCategories2 = response.results.specialCategories
+                }
             case .failure(let error):
                 print(error.localizedDescription)
             }

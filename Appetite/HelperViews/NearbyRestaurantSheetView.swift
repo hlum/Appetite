@@ -100,7 +100,7 @@ extension NearbyRestaurantSheetView {
     }
     
     private func nameAndAdress(for shop:Shop)->some View{
-        VStack{
+        VStack(alignment: .leading){
             Text(shop.name)
                 .font(.headline)
                 .fontWeight(.semibold)
@@ -127,7 +127,7 @@ extension NearbyRestaurantSheetView {
     }
     
     private func cardInfo(for shop : Shop)-> some View{
-        VStack{
+        VStack(alignment: .leading){
             if let cardInfo = shop.card, !cardInfo.isEmpty {
                 HStack {
                     Image(systemName: "creditcard.fill")

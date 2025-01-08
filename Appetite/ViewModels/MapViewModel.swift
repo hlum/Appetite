@@ -13,7 +13,7 @@ import Combine
 final class MapViewModel:ObservableObject{
     //UI STUFFS
     @Published var showAiResultSheet:Bool = false
-    @Published var showNearbyRestaurantSheet:Bool = true
+    @Published var showNearbyRestaurantSheet:Bool = false
     @Published var showRoutesSheet:Bool = false
     @Published var showFilterSheet:Bool = false
     @Published var showDetailSheetView:Bool = false
@@ -102,8 +102,8 @@ final class MapViewModel:ObservableObject{
             case .success(let userCoordinate):
                 self.userLocation = userCoordinate
                 if !self.fetchedFirstTime{ //画面が表示した一回目だけ
-                    self.getNearbyRestaurants(at: userCoordinate)
                     fetchedFirstTime = true
+                    self.getNearbyRestaurants(at: userCoordinate)
                 }
             case .failure(let error):
                 checkForCustomError(error: error)
