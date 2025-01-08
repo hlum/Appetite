@@ -6,13 +6,35 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		5ED2A5CD81CCF9E15D846C88 /* Pods_Appetite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D08E5B68EEDDD4CBB935E5C4 /* Pods_Appetite.framework */; };
+		B5FF84302D1BB47000A5BE2D /* AppetiteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5FF842B2D1BB47000A5BE2D /* AppetiteApp.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		5E3AE17FCF968FF5DA36F9C7 /* Pods-Appetite.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Appetite.debug.xcconfig"; path = "Target Support Files/Pods-Appetite/Pods-Appetite.debug.xcconfig"; sourceTree = "<group>"; };
+		A3DEF09E4D17EDF29BECADF9 /* Pods-Appetite.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Appetite.release.xcconfig"; path = "Target Support Files/Pods-Appetite/Pods-Appetite.release.xcconfig"; sourceTree = "<group>"; };
 		B5FC6AA72D1BA9A500D0FA2D /* Appetite.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Appetite.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B5FF842B2D1BB47000A5BE2D /* AppetiteApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppetiteApp.swift; sourceTree = "<group>"; };
+		D08E5B68EEDDD4CBB935E5C4 /* Pods_Appetite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Appetite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		B58326312D2824D3000E2F7E /* Exceptions for "Appetite" folder in "Appetite" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = B5FC6AA62D1BA9A500D0FA2D /* Appetite */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		B5FC6AA92D1BA9A500D0FA2D /* Appetite */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				B58326312D2824D3000E2F7E /* Exceptions for "Appetite" folder in "Appetite" target */,
+			);
 			path = Appetite;
 			sourceTree = "<group>";
 		};
@@ -23,17 +45,38 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5ED2A5CD81CCF9E15D846C88 /* Pods_Appetite.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		23385208040149B691AC2AE1 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D08E5B68EEDDD4CBB935E5C4 /* Pods_Appetite.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		74BC20378C75475D5A4CE555 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				5E3AE17FCF968FF5DA36F9C7 /* Pods-Appetite.debug.xcconfig */,
+				A3DEF09E4D17EDF29BECADF9 /* Pods-Appetite.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
 		B5FC6A9E2D1BA9A500D0FA2D = {
 			isa = PBXGroup;
 			children = (
+				B5FF842B2D1BB47000A5BE2D /* AppetiteApp.swift */,
 				B5FC6AA92D1BA9A500D0FA2D /* Appetite */,
 				B5FC6AA82D1BA9A500D0FA2D /* Products */,
+				74BC20378C75475D5A4CE555 /* Pods */,
+				23385208040149B691AC2AE1 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -52,9 +95,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = B5FC6AB52D1BA9A600D0FA2D /* Build configuration list for PBXNativeTarget "Appetite" */;
 			buildPhases = (
+				36138E3E2D6DD9810569BCB6 /* [CP] Check Pods Manifest.lock */,
 				B5FC6AA32D1BA9A500D0FA2D /* Sources */,
 				B5FC6AA42D1BA9A500D0FA2D /* Frameworks */,
 				B5FC6AA52D1BA9A500D0FA2D /* Resources */,
+				CCCE2DED8858BE2EAD2BB750 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -64,8 +109,6 @@
 				B5FC6AA92D1BA9A500D0FA2D /* Appetite */,
 			);
 			name = Appetite;
-			packageProductDependencies = (
-			);
 			productName = Appetite;
 			productReference = B5FC6AA72D1BA9A500D0FA2D /* Appetite.app */;
 			productType = "com.apple.product-type.application";
@@ -114,11 +157,54 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		36138E3E2D6DD9810569BCB6 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-Appetite-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		CCCE2DED8858BE2EAD2BB750 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Appetite/Pods-Appetite-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Appetite/Pods-Appetite-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Appetite/Pods-Appetite-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		B5FC6AA32D1BA9A500D0FA2D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B5FF84302D1BB47000A5BE2D /* AppetiteApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -185,6 +271,7 @@
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
 		};
@@ -240,12 +327,14 @@
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = 6.0;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
 		};
 		B5FC6AB62D1BA9A600D0FA2D /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 5E3AE17FCF968FF5DA36F9C7 /* Pods-Appetite.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -254,12 +343,16 @@
 				DEVELOPMENT_ASSET_PATHS = "\"Appetite/Preview Content\"";
 				DEVELOPMENT_TEAM = GNG4VLAQ7U;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Appetite/Info.plist;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "レストランへのご案内や周囲のレストランを検索するため位置情報を取得する必要があります。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -267,14 +360,19 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "-24cm0138.Appetite";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
 		B5FC6AB72D1BA9A600D0FA2D /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A3DEF09E4D17EDF29BECADF9 /* Pods-Appetite.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -283,12 +381,16 @@
 				DEVELOPMENT_ASSET_PATHS = "\"Appetite/Preview Content\"";
 				DEVELOPMENT_TEAM = GNG4VLAQ7U;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Appetite/Info.plist;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "レストランへのご案内や周囲のレストランを検索するため位置情報を取得する必要があります。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -296,9 +398,13 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "-24cm0138.Appetite";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
