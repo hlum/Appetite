@@ -162,8 +162,8 @@ extension RestaurantPreviewView{
                         .font(.subheadline)
                         .bold()
                 } else {
-                    Text(openTime)
-                        .font(.subheadline)
+                    Text("営業時間は詳細画面でご確認ください")
+                        .font(.caption)
                         .bold()
                 }
             }
