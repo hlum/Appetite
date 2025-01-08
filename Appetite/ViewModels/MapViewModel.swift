@@ -36,6 +36,7 @@ final class MapViewModel:ObservableObject{
     @Published var transportType:MKDirectionsTransportType = .automobile
     @Published var availableRoutes:[MKRoute] = []
     @Published var selectedRoute:MKRoute? = nil
+    @Published var notificationObserver:NSObjectProtocol?
     
     
     //OBJECTS
@@ -65,6 +66,10 @@ final class MapViewModel:ObservableObject{
     deinit{
         locationManager.onLocationUpdate = nil
         cancellables.removeAll()
+        if let observer = notificationObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+
     }
     
     func setUp(_ filterManager:FilterManager){//passed the environment object from the view
@@ -335,7 +340,6 @@ extension MapViewModel{
         request.source = MKMapItem(placemark: MKPlacemark(coordinate: userLocation))
         request.destination = MKMapItem(placemark: MKPlacemark(coordinate: destinationCoordinate))
         request.transportType = transportType
-        request.requestsAlternateRoutes = true // Request multiple routes
         
         Task{
             do{
@@ -356,11 +360,8 @@ extension MapViewModel{
     }
     
     func updateRoute(){
-        //10m移動したら
-        locationManager.onLocationUpdate = {[weak self] _ in
-            if let userLocation = self?.userLocation{
-                self?.moveCamera(to: userLocation)
-            }
+        //3m移動したら
+        notificationObserver = NotificationCenter.default.addObserver(forName:Notification.Name("UserLocationUpdated"),object: nil,queue: .main) { [weak self] notification in
             self?.getRouteUpdate()
         }
     }
