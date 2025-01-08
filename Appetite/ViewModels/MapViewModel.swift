@@ -13,7 +13,7 @@ import Combine
 final class MapViewModel:ObservableObject{
     //UI STUFFS
     @Published var showAiResultSheet:Bool = false
-    @Published var showNearbyRestaurantSheet:Bool = false
+    @Published var showNearbyRestaurantSheet:Bool = true
     @Published var showRoutesSheet:Bool = false
     @Published var showFilterSheet:Bool = false
     @Published var showDetailSheetView:Bool = false
@@ -24,6 +24,8 @@ final class MapViewModel:ObservableObject{
     
     @Published var searchText:String = ""
     @Published var stillLoading:Bool = false
+    
+    @Published var range = 300
     
     @Published var showSearchedRestaurants: Bool = false
     @Published var selectedRestaurant:Shop? = nil
@@ -221,7 +223,8 @@ extension MapViewModel{
         }
     }
     
-    private func calculateRange(for span:MKCoordinateSpan)->Int{
+    @discardableResult
+    func calculateRange(for span:MKCoordinateSpan)->Int{
         //どちらか大きい方で決める
         let maxDelta = max(span.longitudeDelta, span.latitudeDelta)
         
@@ -238,12 +241,24 @@ extension MapViewModel{
          */
         
         switch approximateMeters {
-        case 0..<1700:      return 1
-        case 1700..<2150:    return 2
-        case 2150..<3000:   return 3
-        case 3000..<4000:  return 4
-        case 4000..<5200: return 5
-        default:           return 5
+        case 0..<1700:
+            self.range = 300
+            return 1
+        case 1700..<2150:
+            self.range = 500
+            return 2
+        case 2150..<3000:
+            self.range = 1000
+            return 3
+        case 3000..<5000:
+            self.range = 2000
+            return 4
+        case 5000..<7000:
+            self.range = 3000
+            return 5
+        default:
+            self.range = 3000
+            return 5
         }
     }
     

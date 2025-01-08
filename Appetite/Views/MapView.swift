@@ -91,6 +91,7 @@ extension MapView{
             .onMapCameraChange(frequency: .continuous, {context in
                 vm.currentSeeingRegionSpan = context.region.span
                 vm.currentSeeingRegionCenterCoordinate = context.camera.centerCoordinate//get the coordinate of the region dragged by user
+                vm.calculateRange(for: vm.currentSeeingRegionSpan)
             })
             .onMapCameraChange(frequency: .onEnd, { context in
                 withAnimation(.bouncy) {
@@ -382,7 +383,7 @@ extension MapView{
                     cameraPositionChanged = false
                 }
             }label:{
-                Text("このエリアを検索")
+                Text("この\(vm.range)m以内を検索")
                     .font(.caption)
                     .padding()
                     .background(Color.black.opacity(0.7))
