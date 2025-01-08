@@ -362,7 +362,9 @@ extension MapViewModel{
     func updateRoute(){
         //3m移動したら
         notificationObserver = NotificationCenter.default.addObserver(forName:Notification.Name("UserLocationUpdated"),object: nil,queue: .main) { [weak self] notification in
-            self?.getRouteUpdate()
+            if self?.selectedRoute != nil{            
+                self?.getRouteUpdate()
+            }
         }
     }
 }
